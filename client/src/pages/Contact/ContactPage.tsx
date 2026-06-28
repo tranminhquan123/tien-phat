@@ -49,11 +49,11 @@ export function ContactPage() {
           </div>
 
           {[
-            { icon: Phone, label: 'Hotline', value: '0909 123 456', href: 'tel:0909123456' },
-            { icon: Mail, label: 'Email', value: 'info@tienphat.com.vn', href: 'mailto:info@tienphat.com.vn' },
-            { icon: MapPin, label: 'Địa chỉ', value: '123 Đường Nguyễn Văn Linh, Quận 7, TP.HCM', href: 'https://maps.google.com' },
-            { icon: Clock, label: 'Giờ làm việc', value: 'Thứ 2 – Thứ 7: 7:30 – 17:30', href: null },
-            { icon: Facebook, label: 'Facebook', value: 'facebook.com/tienphat', href: 'https://facebook.com/tienphat' },
+            { icon: Phone, label: 'Hotline', value: '0764 432 015', href: 'tel:0764432015' },
+            { icon: Mail, label: 'Email', value: 'hochiminh145632@gmail.com', href: 'mailto:hochiminh145632@gmail.com' },
+            { icon: MapPin, label: 'Địa chỉ', value: '137 Đường Liên Phường, Phường Phước Long, TP. Hồ Chí Minh', href: 'https://www.google.com/maps/place/C%C3%94NG+TY+TNHH+VLXD+V%C3%80+TRANG+TR%C3%8D+N%E1%BB%98I+TH%E1%BA%A4T+TI%E1%BA%BEN+PH%C3%81T/@10.807691,106.7822559,17z/data=!4m14!1m7!3m6!1s0x3175272fdf2dcd2d:0xd70acdcd0704c689!2zQ8OUTkcgVFkgVE5ISCBWTFhEIFbDgCBUUkFORyBUUsONIE7hu5hJIFRI4bqkVCBUSeG6vk4gUEjDgVQ!8m2!3d10.807691!4d106.7848308!16s%2Fg%2F11qq5gptnq!3m5!1s0x3175272fdf2dcd2d:0xd70acdcd0704c689!8m2!3d10.807691!4d106.7848308!16s%2Fg%2F11qq5gptnq?entry=ttu&g_ep=EgoyMDI2MDYyNC4wIKXMDSoASAFQAw%3D%3D'},
+            { icon: Clock, label: 'Giờ làm việc', value: 'Thứ 2 – Thứ 6: 7:30 – 17:30', href: null },
+            { icon: Facebook, label: 'Facebook', value: 'facebook.com/tienphat', href: 'https://www.facebook.com/VLXDTIENPHAT' },
           ].map(({ icon: Icon, label, value, href }) => (
             <div key={label} className="flex items-start gap-4 p-4 card">
               <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center shrink-0">
@@ -80,7 +80,7 @@ export function ContactPage() {
           {/* Map placeholder */}
           <div className="rounded-xl overflow-hidden h-48 bg-gray-200 flex items-center justify-center">
             <a
-              href="https://maps.google.com/?q=Nguyễn+Văn+Linh+Quận+7+TP.HCM"
+              href="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3919.0472783577793!2d106.7822559!3d10.807691!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3175272fdf2dcd2d%3A0xd70acdcd0704c689!2zQ8OUTkcgVFkgVE5ISCBWTFhEIFbDgCBUUkFORyBUUsONIE7hu5hJIFRI4bqkVCBUSeG6vk4gUEjDgVQ!5e0!3m2!1svi!2s!4v1782657784232!5m2!1svi!2s"
               target="_blank"
               rel="noreferrer"
               className="text-brand-600 font-semibold text-sm flex items-center gap-2 hover:underline"

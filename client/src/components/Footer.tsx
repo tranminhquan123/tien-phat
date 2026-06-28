@@ -18,7 +18,7 @@ export function Footer() {
             </div>
           </div>
           <p className="text-sm text-gray-400 leading-relaxed">
-            Hơn 6 năm cung cấp vật liệu xây dựng và nội thất chất lượng cao tại TP. Hồ Chí Minh.
+            Hơn 5 năm cung cấp vật liệu xây dựng và nội thất chất lượng cao tại TP. Hồ Chí Minh.
           </p>
         </div>
 

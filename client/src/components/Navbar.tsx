@@ -190,7 +190,7 @@ export function Navbar() {
                   className="flex items-center justify-center gap-2 bg-brand-600 text-white py-3 rounded-xl font-semibold text-sm"
                 >
                   <Phone size={16} />
-                  Gọi ngay: 0909 123 456
+                  Gọi ngay: 0764 432 015
                 </a>
               </div>
             </div>
