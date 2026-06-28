@@ -23,10 +23,10 @@ async function main() {
   // Cấu hình website
   const configs = [
     { key: 'site_name', value: 'Tiến Phát - Vật Liệu Xây Dựng & Nội Thất', description: 'Tên website' },
-    { key: 'site_phone', value: '0909 123 456', description: 'Số điện thoại liên hệ' },
+    { key: 'site_phone', value: '0764 432 015', description: 'Số điện thoại liên hệ' },
     { key: 'site_email', value: 'info@tienphat.com.vn', description: 'Email liên hệ' },
     { key: 'site_address', value: '123 Đường Nguyễn Văn Linh, Quận 7, TP.HCM', description: 'Địa chỉ' },
-    { key: 'site_zalo', value: '0909123456', description: 'Số Zalo' },
+    { key: 'site_zalo', value: '0764432015', description: 'Số Zalo' },
     { key: 'site_facebook', value: 'https://facebook.com/tienphat', description: 'Facebook' },
     { key: 'site_working_hours', value: 'Thứ 2 - Thứ 7: 7:30 - 17:30', description: 'Giờ làm việc' },
     { key: 'site_map_url', value: 'https://maps.google.com', description: 'Google Maps embed URL' },

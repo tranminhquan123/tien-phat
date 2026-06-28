@@ -173,10 +173,10 @@ export function ProductDetailPage() {
           {/* CTA */}
           <div className="flex flex-col gap-3 mt-auto">
             <a
-              href="tel:0909123456"
+              href="tel:0764432015"
               className="btn-primary justify-center text-base py-3"
             >
-              <Phone size={18} /> Gọi ngay: 0909 123 456
+              <Phone size={18} /> Gọi ngay: 0764 432 015
             </a>
             <Link to="/lien-he" className="btn-outline justify-center text-base py-3">
               <MapPin size={18} /> Gửi yêu cầu báo giá

@@ -139,7 +139,7 @@ export function Navbar() {
           {/* CTA + Mobile button */}
           <div className="flex items-center gap-3">
             <a
-              href="tel:0909123456"
+              href="tel:0764432015"
               className="hidden md:flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               <Phone size={15} />
@@ -186,7 +186,7 @@ export function Navbar() {
               ))}
               <div className="pt-2 px-4">
                 <a
-                  href="tel:0909123456"
+                  href="tel:0764432015"
                   className="flex items-center justify-center gap-2 bg-brand-600 text-white py-3 rounded-xl font-semibold text-sm"
                 >
                   <Phone size={16} />

@@ -116,7 +116,7 @@ export function ContactPage() {
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="0909 123 456"
+                placeholder="0764432015"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-100"
               />
             </div>

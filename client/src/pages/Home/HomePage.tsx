@@ -18,8 +18,8 @@ import type { Category, Product, Banner } from '@/types';
 const WHY_US = [
   { icon: ShieldCheck, title: 'Hàng chính hãng 100%', desc: 'Cam kết nguồn gốc xuất xứ rõ ràng, có hóa đơn chứng từ đầy đủ.' },
   { icon: Star, title: 'Giá tốt nhất thị trường', desc: 'Làm trực tiếp với nhà sản xuất, không qua trung gian – giá luôn cạnh tranh.' },
-  { icon: Truck, title: 'Giao hàng toàn TP.HCM', desc: 'Đội xe tải riêng, giao đúng hẹn, hỗ trợ bốc vác tận chân công trình.' },
-  { icon: HeadphonesIcon, title: 'Tư vấn tận tâm', desc: 'Đội ngũ kỹ thuật 10+ năm kinh nghiệm, sẵn sàng tư vấn miễn phí.' },
+  { icon: Truck, title: 'Giao hàng toàn TP.HCM', desc: 'Đội xe tải riêng, giao đúng hẹn.' },
+  { icon: HeadphonesIcon, title: 'Tư vấn tận tâm', desc: 'Nhân viên tận tình, sẵn sàng tư vấn miễn phí.' },
 ];
 
 const FALLBACK_BANNERS: Banner[] = [
@@ -186,7 +186,7 @@ export function HomePage() {
       <section className="py-12 bg-brand-600 text-white">
         <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { value: '10+', label: 'Năm kinh nghiệm' },
+            { value: '5+', label: 'Năm kinh nghiệm' },
             { value: '5.000+', label: 'Khách hàng tin dùng' },
             { value: '200+', label: 'Sản phẩm đa dạng' },
             { value: '98%', label: 'Khách hàng hài lòng' },
@@ -204,11 +204,11 @@ export function HomePage() {
         <div className="container mx-auto text-center">
           <h2 className="section-title mb-3">Cần tư vấn vật liệu xây dựng?</h2>
           <p className="text-gray-500 mb-8 max-w-md mx-auto">
-            Đội ngũ chuyên gia của Tiến Phát sẵn sàng hỗ trợ bạn lựa chọn vật liệu phù hợp nhất cho công trình.
+            Nhân viên của Tiến Phát sẵn sàng hỗ trợ bạn lựa chọn vật liệu phù hợp nhất cho công trình.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="tel:0909123456" className="btn-primary text-base px-8 py-3 shadow-md shadow-brand-200">
-              📞 Gọi ngay: 0909 123 456
+            <a href="tel:0764432015" className="btn-primary text-base px-8 py-3 shadow-md shadow-brand-200">
+              📞 Gọi ngay: 0764 432 015
             </a>
             <Link to="/lien-he" className="btn-outline text-base px-8 py-3">
               Gửi yêu cầu tư vấn
