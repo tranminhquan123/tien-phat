@@ -6,7 +6,7 @@ export function ZaloButton() {
     <div className="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-3">
       {/* Zalo */}
       <a
-        href="https://zalo.me/0909123456"
+        href="https://zalo.me/0764432015"
         target="_blank"
         rel="noreferrer"
         className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105 group"
@@ -24,12 +24,12 @@ export function ZaloButton() {
 
       {/* Phone */}
       <a
-        href="tel:0909123456"
+        href="tel:0764432015"
         className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105 group animate-bounce"
         aria-label="Gọi ngay"
       >
         <span className="hidden group-hover:block pl-3 pr-1 text-sm font-semibold whitespace-nowrap">
-          0909 123 456
+          0764 432 015
         </span>
         <div className="w-12 h-12 flex items-center justify-center shrink-0">
           <Phone size={22} />
