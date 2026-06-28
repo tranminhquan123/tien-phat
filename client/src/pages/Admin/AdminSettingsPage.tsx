@@ -9,10 +9,10 @@ import type { SiteConfig } from '@/types';
 
 const CONFIG_FIELDS: { key: keyof SiteConfig; label: string; placeholder: string; type?: string }[] = [
   { key: 'site_name', label: 'Tên công ty', placeholder: 'Công ty TNHH Tiến Phát' },
-  { key: 'site_phone', label: 'Số điện thoại', placeholder: '0909 123 456', type: 'tel' },
+  { key: 'site_phone', label: 'Số điện thoại', placeholder: '0764 432 015', type: 'tel' },
   { key: 'site_email', label: 'Email', placeholder: 'info@tienphat.com.vn', type: 'email' },
   { key: 'site_address', label: 'Địa chỉ', placeholder: '123 Nguyễn Văn Linh, Q.7, TP.HCM' },
-  { key: 'site_zalo', label: 'Số Zalo', placeholder: '0909123456' },
+  { key: 'site_zalo', label: 'Số Zalo', placeholder: '0764432015' },
   { key: 'site_facebook', label: 'Facebook URL', placeholder: 'https://facebook.com/...' },
   { key: 'site_working_hours', label: 'Giờ làm việc', placeholder: 'Thứ 2 - Thứ 7: 7:30 - 17:30' },
 ];
