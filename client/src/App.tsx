@@ -1,7 +1,6 @@
 // src/App.tsx
 import {
   BrowserRouter,
-  HashRouter,
   Routes,
   Route,
   Navigate,
@@ -32,10 +31,8 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 export function App() {
-  const Router = import.meta.env.PROD ? HashRouter : BrowserRouter;
-
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
         {/* Public */}
         <Route element={<PublicLayout />}>
@@ -66,6 +63,6 @@ export function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
