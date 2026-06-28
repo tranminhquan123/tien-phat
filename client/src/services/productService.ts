@@ -39,7 +39,7 @@ export function adminGetProducts(params: { search?: string; categoryId?: string;
   return api.get<ProductListResponse>(`/products/admin/list?${qs.toString()}`);
 }
 
-export function adminCreateProduct(data: Partial<Product> & {
+export function adminCreateProduct(data: Omit<Partial<Product>, 'images'> & {
   images?: Array<{
     url: string;
     altText?: string;
