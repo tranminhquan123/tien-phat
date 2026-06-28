@@ -46,7 +46,7 @@ export function Navbar() {
           <span className="opacity-90">Thứ 2 – Thứ 6: 7:30 – 17:30 | 137 Đường Liên Phường, Phường Phước Long, TP.HCM</span>
           <a href="tel:0764432015" className="flex items-center gap-1 font-semibold hover:opacity-80 transition-opacity">
             <Phone size={14} />
-            0764432015
+            0764 432 015
           </a>
         </div>
       </div>
