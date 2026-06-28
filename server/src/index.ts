@@ -24,6 +24,16 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 // Phục vụ file upload
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
+// Trang gốc để kiểm tra backend đang hoạt động
+app.get('/', (_req, res) => {
+  res.json({
+    service: 'Tien Phat API',
+    status: 'online',
+    health: '/api/health',
+    message: 'Backend API is running. The website frontend is deployed separately.',
+  });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -32,7 +42,7 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/config', configRoutes);
 
 // Health check
-app.get('/api/health', (_, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
