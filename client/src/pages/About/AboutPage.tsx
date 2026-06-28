@@ -85,7 +85,7 @@ export function AboutPage() {
             Liên hệ ngay để được tư vấn miễn phí và nhận báo giá tốt nhất.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <a href="tel:0909123456" className="bg-white text-brand-600 font-bold px-7 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+            <a href="tel:0764432015" className="bg-white text-brand-600 font-bold px-7 py-3 rounded-lg hover:bg-gray-50 transition-colors">
               📞 0764 432 015
             </a>
             <Link to="/lien-he" className="border border-white/60 text-white font-semibold px-7 py-3 rounded-lg hover:bg-white/10 transition-colors">
