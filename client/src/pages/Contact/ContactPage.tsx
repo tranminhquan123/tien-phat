@@ -4,6 +4,9 @@ import { Phone, Mail, MapPin, Clock, Facebook, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { submitContact } from '@/services/contactService';
 
+const MAP_EMBED_URL = 'https://www.google.com/maps?q=10.807691,106.7848308&z=17&output=embed';
+const MAP_OPEN_URL = 'https://www.google.com/maps/search/?api=1&query=10.807691,106.7848308';
+
 export function ContactPage() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -18,6 +21,7 @@ export function ContactPage() {
       toast.error('Vui lòng nhập đầy đủ họ tên, số điện thoại và nội dung.');
       return;
     }
+
     setSubmitting(true);
     try {
       await submitContact(form);
@@ -32,7 +36,6 @@ export function ContactPage() {
 
   return (
     <div>
-      {/* Hero */}
       <div className="bg-dark-900 text-white py-14">
         <div className="container mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-black mb-2">Liên hệ với chúng tôi</h1>
@@ -41,17 +44,18 @@ export function ContactPage() {
       </div>
 
       <div className="container mx-auto py-12 grid lg:grid-cols-2 gap-10">
-        {/* Contact info */}
         <div className="space-y-5">
           <div>
             <h2 className="text-xl font-black text-gray-900 mb-1">Thông tin liên hệ</h2>
-            <p className="text-gray-500 text-sm">Hãy liên hệ với chúng tôi qua các kênh bên dưới hoặc gửi form, chúng tôi sẽ phản hồi trong vòng 30 phút.</p>
+            <p className="text-gray-500 text-sm">
+              Hãy liên hệ với chúng tôi qua các kênh bên dưới hoặc gửi form, chúng tôi sẽ phản hồi trong vòng 30 phút.
+            </p>
           </div>
 
           {[
             { icon: Phone, label: 'Hotline', value: '0764 432 015', href: 'tel:0764432015' },
             { icon: Mail, label: 'Email', value: 'hochiminh145632@gmail.com', href: 'mailto:hochiminh145632@gmail.com' },
-            { icon: MapPin, label: 'Địa chỉ', value: '137 Đường Liên Phường, Phường Phước Long, TP. Hồ Chí Minh', href: 'https://www.google.com/maps/place/C%C3%94NG+TY+TNHH+VLXD+V%C3%80+TRANG+TR%C3%8D+N%E1%BB%98I+TH%E1%BA%A4T+TI%E1%BA%BEN+PH%C3%81T/@10.807691,106.7822559,17z/data=!4m14!1m7!3m6!1s0x3175272fdf2dcd2d:0xd70acdcd0704c689!2zQ8OUTkcgVFkgVE5ISCBWTFhEIFbDgCBUUkFORyBUUsONIE7hu5hJIFRI4bqkVCBUSeG6vk4gUEjDgVQ!8m2!3d10.807691!4d106.7848308!16s%2Fg%2F11qq5gptnq!3m5!1s0x3175272fdf2dcd2d:0xd70acdcd0704c689!8m2!3d10.807691!4d106.7848308!16s%2Fg%2F11qq5gptnq?entry=ttu&g_ep=EgoyMDI2MDYyNC4wIKXMDSoASAFQAw%3D%3D'},
+            { icon: MapPin, label: 'Địa chỉ', value: '137 Đường Liên Phường, Phường Phước Long, TP. Hồ Chí Minh', href: MAP_OPEN_URL },
             { icon: Clock, label: 'Giờ làm việc', value: 'Thứ 2 – Thứ 6: 7:30 – 17:30', href: null },
             { icon: Facebook, label: 'Facebook', value: 'facebook.com/tienphat', href: 'https://www.facebook.com/VLXDTIENPHAT' },
           ].map(({ icon: Icon, label, value, href }) => (
@@ -77,20 +81,29 @@ export function ContactPage() {
             </div>
           ))}
 
-          {/* Map placeholder */}
-          <div className="rounded-xl overflow-hidden h-48 bg-gray-200 flex items-center justify-center">
-            <a
-              href="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3919.0472783577793!2d106.7822559!3d10.807691!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3175272fdf2dcd2d%3A0xd70acdcd0704c689!2zQ8OUTkcgVFkgVE5ISCBWTFhEIFbDgCBUUkFORyBUUsONIE7hu5hJIFRI4bqkVCBUSeG6vk4gUEjDgVQ!5e0!3m2!1svi!2s!4v1782657784232!5m2!1svi!2s"
-              target="_blank"
-              rel="noreferrer"
-              className="text-brand-600 font-semibold text-sm flex items-center gap-2 hover:underline"
-            >
-              <MapPin size={16} /> Xem trên Google Maps
-            </a>
+          <div className="rounded-xl overflow-hidden h-64 bg-gray-200 shadow-sm">
+            <iframe
+              src={MAP_EMBED_URL}
+              title="Bản đồ Công ty Tiến Phát"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
           </div>
+
+          <a
+            href={MAP_OPEN_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 text-brand-600 font-semibold text-sm hover:underline"
+          >
+            <MapPin size={16} /> Xem chỉ đường trên Google Maps
+          </a>
         </div>
 
-        {/* Form */}
         <div className="card p-6 md:p-8">
           <h2 className="text-xl font-black text-gray-900 mb-6">Gửi yêu cầu tư vấn</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -107,6 +120,7 @@ export function ContactPage() {
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-100"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Số điện thoại <span className="text-red-500">*</span>
@@ -116,14 +130,13 @@ export function ContactPage() {
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="0764432015"
+                placeholder="0764 432 015"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-100"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Email (không bắt buộc)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email (không bắt buộc)</label>
               <input
                 type="email"
                 name="email"
@@ -133,6 +146,7 @@ export function ContactPage() {
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-100"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Nội dung <span className="text-red-500">*</span>
@@ -146,6 +160,7 @@ export function ContactPage() {
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-100 resize-none"
               />
             </div>
+
             <button
               type="submit"
               disabled={submitting}
