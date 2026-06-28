@@ -1,5 +1,11 @@
 // src/App.tsx
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter,
+  HashRouter,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Public layout
@@ -26,8 +32,10 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 export function App() {
+  const Router = import.meta.env.PROD ? HashRouter : BrowserRouter;
+
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         {/* Public */}
         <Route element={<PublicLayout />}>
@@ -58,6 +66,6 @@ export function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
