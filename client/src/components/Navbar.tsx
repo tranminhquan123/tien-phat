@@ -79,6 +79,12 @@ export function Navbar() {
                   className="relative"
                   onMouseEnter={() => setDropdown(link.label)}
                   onMouseLeave={() => setDropdown(null)}
+                  onFocus={() => setDropdown(link.label)}
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                      setDropdown(null);
+                    }
+                  }}
                 >
                   <NavLink
                     to={link.to}
@@ -95,16 +101,18 @@ export function Navbar() {
                     <ChevronDown size={14} className={clsx('transition-transform', dropdown === link.label && 'rotate-180')} />
                   </NavLink>
                   {dropdown === link.label && (
-                    <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-gray-100 rounded-xl shadow-xl py-1 z-50">
-                      {link.children.map((child) => (
-                        <Link
-                          key={child.to}
-                          to={child.to}
-                          className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-colors"
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
+                    <div className="absolute top-full left-0 pt-2 w-56 z-50">
+                      <div className="bg-white border border-gray-100 rounded-xl shadow-xl py-1 overflow-hidden">
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.to}
+                            to={child.to}
+                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-colors"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
