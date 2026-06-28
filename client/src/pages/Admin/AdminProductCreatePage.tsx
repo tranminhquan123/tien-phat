@@ -27,16 +27,27 @@ export function AdminProductCreatePage() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+
     if (!form.name.trim() || !form.categoryId) {
       toast.error('Nhập tên sản phẩm và chọn danh mục');
       return;
     }
 
-    const images = form.imageUrls
-      .split(/\r?\n|,/)
+    const imageUrls = form.imageUrls
+      .split(/\r?\n/)
       .map((url) => url.trim())
-      .filter(Boolean)
-      .map((url, index) => ({ url, isPrimary: index === 0, sortOrder: index }));
+      .filter(Boolean);
+
+    if (imageUrls.length === 0) {
+      toast.error('Hãy chọn ít nhất một hình ảnh sản phẩm');
+      return;
+    }
+
+    const images = imageUrls.map((url, index) => ({
+      url,
+      isPrimary: index === 0,
+      sortOrder: index,
+    }));
 
     setSaving(true);
     try {
@@ -67,7 +78,7 @@ export function AdminProductCreatePage() {
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-black text-gray-900">Thêm sản phẩm</h1>
-          <p className="text-sm text-gray-400">Tạo sản phẩm mới và thêm ảnh bằng đường dẫn công khai</p>
+          <p className="text-sm text-gray-400">Điền thông tin và chọn hình ảnh trực tiếp từ máy tính</p>
         </div>
         <Link to="/admin/san-pham" className="btn-outline py-2 text-sm">
           <ArrowLeft size={16} /> Quay lại
