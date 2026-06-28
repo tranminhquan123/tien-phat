@@ -6,6 +6,14 @@ interface ProductListResponse extends PaginatedResponse<Product> {
   products: Product[];
 }
 
+interface ProductDetailResponse {
+  success: boolean;
+  data: {
+    product: Product;
+    related: Product[];
+  };
+}
+
 export function getProducts(params: {
   category?: string;
   search?: string;
@@ -24,10 +32,21 @@ export function getProducts(params: {
   return api.get<ProductListResponse>(`/products${query ? `?${query}` : ''}`);
 }
 
-export function getProductBySlug(slug: string) {
-  return api.get<{ success: boolean; data: { product: Product; related: Product[] } }>(
-    `/products/${slug}`
-  );
+export async function getProductBySlug(slug: string) {
+  const response = await api.get<ProductDetailResponse>(`/products/${slug}`);
+  const category = response.data.product.category;
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      related: (response.data.related ?? []).map((product) => ({
+        ...product,
+        category: product.category ?? category,
+        images: Array.isArray(product.images) ? product.images : [],
+      })),
+    },
+  };
 }
 
 // Admin
