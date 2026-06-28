@@ -46,7 +46,7 @@ export function Navbar() {
           <span className="opacity-90">Thứ 2 – Thứ 6: 7:30 – 17:30 | 137 Đường Liên Phường, Phường Phước Long, TP.HCM</span>
           <a href="tel:0764432015" className="flex items-center gap-1 font-semibold hover:opacity-80 transition-opacity">
             <Phone size={14} />
-            0764432015
+            0764 432 015
           </a>
         </div>
       </div>
@@ -139,7 +139,7 @@ export function Navbar() {
           {/* CTA + Mobile button */}
           <div className="flex items-center gap-3">
             <a
-              href="tel:0909123456"
+              href="tel:0764432015"
               className="hidden md:flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               <Phone size={15} />
@@ -186,7 +186,7 @@ export function Navbar() {
               ))}
               <div className="pt-2 px-4">
                 <a
-                  href="tel:0909123456"
+                  href="tel:0764432015"
                   className="flex items-center justify-center gap-2 bg-brand-600 text-white py-3 rounded-xl font-semibold text-sm"
                 >
                   <Phone size={16} />
