@@ -43,10 +43,10 @@ export function Navbar() {
       {/* Top bar */}
       <div className="bg-brand-700 text-white text-sm py-1.5 hidden md:block">
         <div className="container mx-auto flex justify-between items-center">
-          <span className="opacity-90">Thứ 2 – Thứ 7: 7:30 – 17:30 | 123 Nguyễn Văn Linh, Q.7, TP.HCM</span>
-          <a href="tel:0909123456" className="flex items-center gap-1 font-semibold hover:opacity-80 transition-opacity">
+          <span className="opacity-90">Thứ 2 – Thứ 6: 7:30 – 17:30 | 137 Đường Liên Phường, Phường Phước Long, TP.HCM</span>
+          <a href="tel:0764432015" className="flex items-center gap-1 font-semibold hover:opacity-80 transition-opacity">
             <Phone size={14} />
-            0909 123 456
+            0764432015
           </a>
         </div>
       </div>

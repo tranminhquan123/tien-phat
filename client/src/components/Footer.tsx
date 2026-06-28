@@ -18,7 +18,7 @@ export function Footer() {
             </div>
           </div>
           <p className="text-sm text-gray-400 leading-relaxed">
-            Hơn 10 năm cung cấp vật liệu xây dựng và nội thất chất lượng cao tại TP. Hồ Chí Minh.
+            Hơn 6 năm cung cấp vật liệu xây dựng và nội thất chất lượng cao tại TP. Hồ Chí Minh.
           </p>
         </div>
 
@@ -67,27 +67,29 @@ export function Footer() {
           <ul className="space-y-3 text-sm">
             <li className="flex gap-2.5">
               <MapPin size={16} className="text-brand-400 shrink-0 mt-0.5" />
-              <span>123 Nguyễn Văn Linh, Quận 7, TP.HCM</span>
+              <span>137 Đường Liên Phường, Phường Phước Long, TP. Hồ Chí Minh</span>
             </li>
             <li className="flex gap-2.5">
               <Phone size={16} className="text-brand-400 shrink-0 mt-0.5" />
-              <a href="tel:0909123456" className="hover:text-brand-400 transition-colors">
-                0909 123 456
+              <a href="tel:0764432015" className="hover:text-brand-400 transition-colors">
+                0764 432 015
               </a>
             </li>
             <li className="flex gap-2.5">
               <Mail size={16} className="text-brand-400 shrink-0 mt-0.5" />
               <a href="mailto:info@tienphat.com.vn" className="hover:text-brand-400 transition-colors">
-                info@tienphat.com.vn
+                hochiminh145632@gmail.com
               </a>
             </li>
             <li className="flex gap-2.5">
               <Clock size={16} className="text-brand-400 shrink-0 mt-0.5" />
-              <span>Thứ 2 – Thứ 7: 7:30 – 17:30</span>
+              <span>Thứ 2 – Thứ 6: 7:30 – 17:30</span>
+              <br></br>
+              <span> Thứ 7: 7:30 – 17:00</span>
             </li>
             <li className="flex gap-2.5">
               <Facebook size={16} className="text-brand-400 shrink-0 mt-0.5" />
-              <a href="https://facebook.com/tienphat" target="_blank" rel="noreferrer" className="hover:text-brand-400 transition-colors">
+              <a href="https://www.facebook.com/VLXDTIENPHAT" target="_blank" rel="noreferrer" className="hover:text-brand-400 transition-colors">
                 Facebook Tiến Phát
               </a>
             </li>
