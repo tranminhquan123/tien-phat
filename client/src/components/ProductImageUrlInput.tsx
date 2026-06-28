@@ -9,15 +9,27 @@ type Props = {
 };
 
 const MAX_IMAGES = 6;
-const MAX_SIZE = 8 * 1024 * 1024;
+const MAX_SIZE = 12 * 1024 * 1024;
+const MAX_DIMENSION = 1600;
 
-function readImage(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error(`Không thể đọc ảnh ${file.name}`));
-    reader.readAsDataURL(file);
-  });
+async function optimizeImage(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    bitmap.close();
+    throw new Error('Trình duyệt không hỗ trợ xử lý ảnh');
+  }
+
+  context.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+  return canvas.toDataURL('image/webp', 0.8);
 }
 
 export function ProductImageUrlInput({ value, onChange }: Props) {
@@ -27,20 +39,24 @@ export function ProductImageUrlInput({ value, onChange }: Props) {
 
   async function selectImages(files: FileList | null) {
     if (!files?.length) return;
-    const selected = Array.from(files).slice(0, MAX_IMAGES - images.length);
+    const available = MAX_IMAGES - images.length;
+    const selected = Array.from(files).slice(0, available);
 
     if (selected.some((file) => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type))) {
       toast.error('Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP');
       return;
     }
     if (selected.some((file) => file.size > MAX_SIZE)) {
-      toast.error('Mỗi ảnh không được vượt quá 8 MB');
+      toast.error('Mỗi ảnh gốc không được vượt quá 12 MB');
       return;
     }
 
     setLoading(true);
     try {
-      const newImages = await Promise.all(selected.map(readImage));
+      const newImages: string[] = [];
+      for (const file of selected) {
+        newImages.push(await optimizeImage(file));
+      }
       onChange([...images, ...newImages].join('\n'));
     } catch (error) {
       toast.error((error as Error).message);
@@ -61,7 +77,7 @@ export function ProductImageUrlInput({ value, onChange }: Props) {
         Hình ảnh sản phẩm
       </div>
       <p className="mb-3 text-xs text-gray-500">
-        Chọn tối đa {MAX_IMAGES} ảnh từ máy tính. Ảnh đầu tiên là ảnh đại diện.
+        Chọn tối đa {MAX_IMAGES} ảnh JPG, PNG hoặc WEBP. Ảnh đầu tiên là ảnh đại diện.
       </p>
 
       <input
@@ -76,10 +92,10 @@ export function ProductImageUrlInput({ value, onChange }: Props) {
         type="button"
         disabled={loading || images.length >= MAX_IMAGES}
         onClick={() => inputRef.current?.click()}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-white px-4 py-5 text-sm font-semibold text-gray-600 hover:border-brand-400 hover:bg-brand-50 hover:text-brand-600 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-white px-4 py-5 text-sm font-semibold text-gray-600 hover:border-brand-400 hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Upload size={18} />
-        {loading ? 'Đang đọc ảnh...' : 'Chọn ảnh từ máy tính'}
+        {loading ? 'Đang tối ưu ảnh...' : 'Chọn ảnh từ máy tính'}
       </button>
 
       {images.length > 0 && (
@@ -91,8 +107,8 @@ export function ProductImageUrlInput({ value, onChange }: Props) {
               <button
                 type="button"
                 onClick={() => removeImage(index)}
-                className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100"
-                aria-label="Xóa ảnh"
+                className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                aria-label={`Xóa ảnh ${index + 1}`}
               >
                 <Trash2 size={14} />
               </button>
