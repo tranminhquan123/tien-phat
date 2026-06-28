@@ -1,16 +1,17 @@
 // src/components/AdminLayout.tsx
 import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Package, FolderOpen, MessageSquare,
-  Settings, LogOut, Menu, X, ChevronRight,
+  Settings, LogOut, Menu, ChevronRight, Globe2, PlusCircle,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '@/contexts/AuthContext';
 
 const NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/san-pham', label: 'Sản phẩm', icon: Package },
+  { to: '/admin/san-pham', label: 'Sản phẩm', icon: Package, end: true },
+  { to: '/admin/san-pham/them-moi', label: 'Thêm sản phẩm', icon: PlusCircle },
   { to: '/admin/danh-muc', label: 'Danh mục', icon: FolderOpen },
   { to: '/admin/lien-he', label: 'Liên hệ', icon: MessageSquare },
   { to: '/admin/cai-dat', label: 'Cài đặt', icon: Settings },
@@ -30,15 +31,15 @@ export function AdminLayout() {
     <aside className="flex flex-col h-full bg-dark-900 text-gray-300 w-64 shrink-0">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-white/10">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 group" onClick={() => setSidebarOpen(false)}>
           <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-black text-sm">TP</span>
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight">Tiến Phát</p>
+            <p className="text-white font-bold text-sm leading-tight group-hover:text-brand-300 transition-colors">Tiến Phát</p>
             <p className="text-xs text-gray-500 leading-tight">Quản trị hệ thống</p>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Nav */}
@@ -65,8 +66,16 @@ export function AdminLayout() {
         ))}
       </nav>
 
-      {/* User + logout */}
+      {/* Website + User + logout */}
       <div className="px-3 py-4 border-t border-white/10">
+        <Link
+          to="/"
+          onClick={() => setSidebarOpen(false)}
+          className="mb-3 flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 hover:text-white transition-colors"
+        >
+          <Globe2 size={18} />
+          Xem website chính
+        </Link>
         <div className="px-3 py-2 mb-2">
           <p className="text-white text-sm font-medium">{admin?.name}</p>
           <p className="text-gray-500 text-xs">@{admin?.username}</p>
@@ -106,10 +115,14 @@ export function AdminLayout() {
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"
+            aria-label="Mở menu quản trị"
           >
             <Menu size={20} />
           </button>
           <span className="font-bold text-gray-800">Tiến Phát Admin</span>
+          <Link to="/" className="ml-auto p-2 rounded-lg text-brand-600 hover:bg-brand-50" aria-label="Về website chính">
+            <Globe2 size={20} />
+          </Link>
         </div>
 
         {/* Page content */}
