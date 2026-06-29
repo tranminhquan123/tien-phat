@@ -14,6 +14,13 @@ import { getTileSizeLabel } from '@/constants/tileSizes';
 import { LoadingSpinner, EmptyState } from '@/components/LoadingSpinner';
 import { Pagination } from '@/components/Pagination';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import {
+  EMPTY_PRODUCT_SPECIFICATIONS,
+  ProductSpecificationFields,
+  productToSpecificationForm,
+  specificationPayload,
+  type ProductSpecificationForm,
+} from '@/components/ProductSpecificationFields';
 import { isRichTextEmpty, sanitizeRichTextHtml } from '@/utils/richText';
 import type { Product, Category } from '@/types';
 
@@ -60,6 +67,7 @@ export function AdminProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
+  const [specifications, setSpecifications] = useState<ProductSpecificationForm>(EMPTY_PRODUCT_SPECIFICATIONS);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -72,6 +80,7 @@ export function AdminProductsPage() {
     : baseFormOptions;
   const formChildLabel = selectedFormCategory?.slug === 'gach-op-lat' ? 'Kích thước' : 'Danh mục cấp 2';
   const filterChildLabel = selectedFilterCategory?.slug === 'gach-op-lat' ? 'kích thước' : 'danh mục cấp 2';
+  const isTileForm = selectedFormCategory?.slug === 'gach-op-lat';
 
   const fetchProducts = useCallback(() => {
     setLoading(true);
@@ -118,6 +127,7 @@ export function AdminProductsPage() {
       isFeatured: product.isFeatured,
       sortOrder: String(product.sortOrder),
     });
+    setSpecifications(productToSpecificationForm(product));
     setModalOpen(true);
   }
 
@@ -133,6 +143,9 @@ export function AdminProductsPage() {
     }
 
     const description = sanitizeRichTextHtml(form.description);
+    const technicalSpecifications = isTileForm
+      ? specificationPayload(specifications, null)
+      : specificationPayload(EMPTY_PRODUCT_SPECIFICATIONS, null);
 
     setSaving(true);
     try {
@@ -148,6 +161,7 @@ export function AdminProductsPage() {
         isActive: form.isActive,
         isFeatured: form.isFeatured,
         sortOrder: parseInt(form.sortOrder) || 0,
+        ...technicalSpecifications,
       });
       toast.success('Đã cập nhật sản phẩm');
       setModalOpen(false);
@@ -340,12 +354,18 @@ export function AdminProductsPage() {
             <div><FieldLabel>Xuất xứ</FieldLabel><input className="field-input" value={form.origin} onChange={(event) => setForm((current) => ({ ...current, origin: event.target.value }))} /></div>
             <div><FieldLabel>Thứ tự hiển thị</FieldLabel><input type="number" className="field-input" value={form.sortOrder} onChange={(event) => setForm((current) => ({ ...current, sortOrder: event.target.value }))} /></div>
 
+            {isTileForm && (
+              <div className="md:col-span-2">
+                <ProductSpecificationFields value={specifications} onChange={setSpecifications} />
+              </div>
+            )}
+
             <div className="md:col-span-2">
               <FieldLabel>Mô tả sản phẩm</FieldLabel>
               <RichTextEditor
                 value={form.description}
                 onChange={(description) => setForm((current) => ({ ...current, description }))}
-                placeholder="Nhập nội dung giới thiệu, ưu điểm, thông số và hướng dẫn sử dụng..."
+                placeholder="Nhập nội dung giới thiệu, ưu điểm và hướng dẫn sử dụng..."
                 minHeight={260}
               />
             </div>
@@ -404,7 +424,7 @@ function Modal({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className={clsx(
         'relative max-h-[92vh] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl',
-        compact ? 'max-w-xl' : 'max-w-4xl'
+        compact ? 'max-w-xl' : 'max-w-5xl'
       )}>
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
           <h3 className="font-black text-gray-900">{title}</h3>
