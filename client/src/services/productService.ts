@@ -16,6 +16,7 @@ interface ProductDetailResponse {
 
 export function getProducts(params: {
   category?: string;
+  size?: string;
   search?: string;
   featured?: boolean;
   page?: number;
@@ -23,6 +24,7 @@ export function getProducts(params: {
 } = {}) {
   const qs = new URLSearchParams();
   if (params.category) qs.set('category', params.category);
+  if (params.size) qs.set('size', params.size);
   if (params.search) qs.set('search', params.search);
   if (params.featured) qs.set('featured', 'true');
   if (params.page) qs.set('page', String(params.page));
@@ -50,10 +52,16 @@ export async function getProductBySlug(slug: string) {
 }
 
 // Admin
-export function adminGetProducts(params: { search?: string; categoryId?: string; page?: number } = {}) {
+export function adminGetProducts(params: {
+  search?: string;
+  categoryId?: string;
+  size?: string;
+  page?: number;
+} = {}) {
   const qs = new URLSearchParams();
   if (params.search) qs.set('search', params.search);
   if (params.categoryId) qs.set('categoryId', params.categoryId);
+  if (params.size) qs.set('size', params.size);
   if (params.page) qs.set('page', String(params.page));
   return api.get<ProductListResponse>(`/products/admin/list?${qs.toString()}`);
 }
