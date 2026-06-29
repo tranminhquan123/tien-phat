@@ -75,6 +75,7 @@ export interface SiteConfig {
   site_name: string;
   site_phone: string;
   site_email: string;
+  contact_notification_email: string;
   site_address: string;
   site_zalo: string;
   site_facebook: string;
