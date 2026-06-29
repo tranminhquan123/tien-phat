@@ -6,16 +6,22 @@ import clsx from 'clsx';
 
 import { getProducts } from '@/services/productService';
 import { getCategories } from '@/services/categoryService';
+import { getTileSizes } from '@/services/tileSizeService';
 import { ProductCard } from '@/components/ProductCard';
 import { Pagination } from '@/components/Pagination';
 import { LoadingSpinner, EmptyState } from '@/components/LoadingSpinner';
-import { TILE_SIZES, getTileSizeLabel } from '@/constants/tileSizes';
+import {
+  DEFAULT_TILE_SIZES,
+  getTileSizeLabel,
+  type TileSizeOption,
+} from '@/constants/tileSizes';
 import type { Product, Category } from '@/types';
 
 export function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [tileSizes, setTileSizes] = useState<TileSizeOption[]>(DEFAULT_TILE_SIZES);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -64,10 +70,13 @@ export function ProductsPage() {
   }, [categorySlug, size, search, page]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
-  useEffect(() => { getCategories(true).then((r) => setCategories(r.data ?? [])); }, []);
+  useEffect(() => {
+    getCategories(true).then((response) => setCategories(response.data ?? []));
+    getTileSizes().then(setTileSizes);
+  }, []);
 
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSearchSubmit(event: React.FormEvent) {
+    event.preventDefault();
     setParam('search', searchInput);
   }
 
@@ -97,7 +106,7 @@ export function ProductsPage() {
             <input
               type="text"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Tìm sản phẩm..."
               className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand-400 w-56"
             />
@@ -201,7 +210,7 @@ export function ProductsPage() {
 
                   {category.slug === 'gach-op-lat' && categorySlug === 'gach-op-lat' && (
                     <ul className="mt-1 ml-3 pl-3 border-l border-gray-200 space-y-0.5">
-                      {TILE_SIZES.map((tileSize) => (
+                      {tileSizes.map((tileSize) => (
                         <li key={tileSize.value}>
                           <button
                             onClick={() => {
