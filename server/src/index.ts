@@ -13,6 +13,9 @@ import { errorHandler } from '@/middlewares/errorHandler';
 
 const app = express();
 
+// Render chuyển tiếp địa chỉ IP thật qua reverse proxy.
+app.set('trust proxy', 1);
+
 // Middlewares
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
