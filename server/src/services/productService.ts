@@ -137,6 +137,17 @@ export async function createProduct(data: {
   brand?: string;
   origin?: string;
   size?: string;
+  color?: string;
+  productType?: string;
+  surface?: string;
+  glaze?: string;
+  application?: string;
+  pattern?: string;
+  spaces?: string;
+  collection?: string;
+  faceCount?: number;
+  piecesPerBox?: number;
+  areaPerBox?: number;
   categoryId: string;
   isActive?: boolean;
   isFeatured?: boolean;
@@ -160,12 +171,23 @@ export async function updateProduct(
   id: string,
   data: Partial<{
     name: string;
-    description: string;
-    price: number;
-    unit: string;
-    brand: string;
-    origin: string;
+    description: string | null;
+    price: number | null;
+    unit: string | null;
+    brand: string | null;
+    origin: string | null;
     size: string | null;
+    color: string | null;
+    productType: string | null;
+    surface: string | null;
+    glaze: string | null;
+    application: string | null;
+    pattern: string | null;
+    spaces: string | null;
+    collection: string | null;
+    faceCount: number | null;
+    piecesPerBox: number | null;
+    areaPerBox: number | null;
     categoryId: string;
     isActive: boolean;
     isFeatured: boolean;
