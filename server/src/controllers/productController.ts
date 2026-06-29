@@ -1,17 +1,23 @@
 // src/controllers/productController.ts
 import type { Request, Response } from 'express';
 import {
-  getPublicProducts, getPublicProductBySlug,
-  getAdminProducts, createProduct, updateProduct, deleteProduct,
-  addProductImage, deleteProductImage,
+  getPublicProducts,
+  getPublicProductBySlug,
+  getAdminProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  addProductImage,
+  deleteProductImage,
 } from '@/services/productService';
 
 // PUBLIC
 export async function listPublicProducts(req: Request, res: Response) {
   try {
-    const { category, search, featured, page, limit } = req.query as Record<string, string>;
+    const { category, size, search, featured, page, limit } = req.query as Record<string, string>;
     const result = await getPublicProducts({
       categorySlug: category,
+      size,
       search,
       featured: featured === 'true',
       page: page ? parseInt(page) : 1,
@@ -26,20 +32,23 @@ export async function listPublicProducts(req: Request, res: Response) {
 export async function getProductDetail(req: Request, res: Response) {
   try {
     const result = await getPublicProductBySlug(req.params['slug'] as string);
-    if (!result) return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
-    res.json({ success: true, data: result });
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
+    }
+    return res.json({ success: true, data: result });
   } catch (err) {
-    res.status(500).json({ success: false, message: (err as Error).message });
+    return res.status(500).json({ success: false, message: (err as Error).message });
   }
 }
 
 // ADMIN
 export async function adminListProducts(req: Request, res: Response) {
   try {
-    const { search, categoryId, page, limit } = req.query as Record<string, string>;
+    const { search, categoryId, size, page, limit } = req.query as Record<string, string>;
     const result = await getAdminProducts({
       search,
       categoryId,
+      size,
       page: page ? parseInt(page) : 1,
       limit: limit ? parseInt(limit) : 20,
     });
