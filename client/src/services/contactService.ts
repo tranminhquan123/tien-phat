@@ -2,8 +2,31 @@
 import { api } from './api';
 import type { ContactMessage } from '@/types';
 
-export function submitContact(data: { name: string; phone: string; email?: string; message: string }) {
-  return api.post<{ success: boolean; message: string }>('/contacts', data);
+export type PreferredContact = 'PHONE' | 'ZALO' | 'EMAIL';
+
+export type ContactSubmissionPayload = {
+  name: string;
+  phone: string;
+  email?: string;
+  message: string;
+  inquiryType?: string;
+  tileSize?: string;
+  area?: string;
+  location?: string;
+  preferredContact?: PreferredContact;
+  preferredTime?: string;
+  sourcePage?: string;
+  website?: string;
+  startedAt?: number;
+};
+
+export function submitContact(data: ContactSubmissionPayload) {
+  return api.post<{
+    success: boolean;
+    data: Pick<ContactMessage, 'id' | 'name' | 'phone' | 'email' | 'message' | 'createdAt'>;
+    emailSent: boolean;
+    message: string;
+  }>('/contacts', data);
 }
 
 export function adminGetContacts(params: { status?: string; page?: number } = {}) {
@@ -23,4 +46,8 @@ export function adminGetContactStats() {
   return api.get<{ success: boolean; data: { total: number; new: number; replied: number } }>(
     '/contacts/admin/stats'
   );
+}
+
+export function adminSendContactTestEmail(email?: string) {
+  return api.post<{ success: boolean; message: string }>('/contacts/admin/test-email', { email });
 }
