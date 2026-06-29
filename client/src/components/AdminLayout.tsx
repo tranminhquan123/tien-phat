@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Package, FolderOpen, MessageSquare,
-  Settings, LogOut, Menu, ChevronRight, Globe2, PlusCircle, Ruler,
+  Settings, LogOut, Menu, ChevronRight, Globe2, PlusCircle,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { to: '/admin/san-pham', label: 'Sản phẩm', icon: Package, end: true },
   { to: '/admin/san-pham/them-moi', label: 'Thêm sản phẩm', icon: PlusCircle },
   { to: '/admin/danh-muc', label: 'Danh mục', icon: FolderOpen },
-  { to: '/admin/kich-thuoc', label: 'Kích thước gạch', icon: Ruler },
   { to: '/admin/lien-he', label: 'Liên hệ', icon: MessageSquare },
   { to: '/admin/cai-dat', label: 'Cài đặt', icon: Settings },
 ];
