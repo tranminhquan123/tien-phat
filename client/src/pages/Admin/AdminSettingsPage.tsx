@@ -25,7 +25,7 @@ const CONFIG_FIELDS: ConfigField[] = [
     label: 'Email nhận thông báo khách hàng',
     placeholder: 'your-email@gmail.com',
     type: 'email',
-    helper: 'Mọi yêu cầu tư vấn mới sẽ được gửi tới địa chỉ này. SMTP vẫn được cấu hình riêng trong Render.',
+    helper: 'Mọi yêu cầu tư vấn mới sẽ được gửi tới địa chỉ này. Trên Render Free, backend ưu tiên Resend API thay vì SMTP.',
   },
   { key: 'site_address', label: 'Địa chỉ', placeholder: '137 Đường Liên Phường, Phường Phước Long, TP.HCM' },
   { key: 'site_zalo', label: 'Số Zalo', placeholder: '0764432015' },
@@ -157,7 +157,7 @@ export function AdminSettingsPage() {
         </div>
 
         <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800">
-          Nút kiểm tra chỉ hoạt động sau khi các biến SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS và EMAIL_FROM đã được khai báo trong Environment của backend trên Render.
+          Render Free chặn các cổng SMTP thông dụng. Hãy cấu hình RESEND_API_KEY trong Environment của backend; SMTP chỉ được dùng làm phương án dự phòng ở môi trường cho phép kết nối SMTP.
         </div>
       </div>
 
