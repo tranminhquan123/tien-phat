@@ -18,8 +18,10 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
 }));
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+
+// 12 ảnh WEBP được gửi trong JSON dưới dạng data URL nên cần giới hạn lớn hơn 20 MB.
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Phục vụ file upload
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
