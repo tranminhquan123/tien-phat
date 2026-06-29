@@ -1,9 +1,10 @@
 // src/components/Navbar.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, X, Phone, ChevronDown, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
-import { TILE_SIZES } from '@/constants/tileSizes';
+import { DEFAULT_TILE_SIZES, type TileSizeOption } from '@/constants/tileSizes';
+import { getTileSizes } from '@/services/tileSizeService';
 
 type NavItem = {
   to: string;
@@ -11,38 +12,47 @@ type NavItem = {
   children?: NavItem[];
 };
 
-const TILE_SIZE_LINKS: NavItem[] = TILE_SIZES.map((size) => ({
-  label: size.label,
-  to: `/san-pham?category=gach-op-lat&size=${size.value}`,
-}));
+function buildNavLinks(tileSizes: TileSizeOption[]): NavItem[] {
+  const tileSizeLinks: NavItem[] = tileSizes.map((size) => ({
+    label: size.label,
+    to: `/san-pham?category=gach-op-lat&size=${size.value}`,
+  }));
 
-const NAV_LINKS: NavItem[] = [
-  { to: '/', label: 'Trang chủ' },
-  {
-    label: 'Sản phẩm',
-    to: '/san-pham',
-    children: [
-      {
-        to: '/san-pham?category=gach-op-lat',
-        label: 'Gạch Ốp Lát',
-        children: TILE_SIZE_LINKS,
-      },
-      { to: '/san-pham?category=son-nuoc', label: 'Sơn Nước' },
-      { to: '/san-pham?category=vat-lieu-chong-tham', label: 'Chống Thấm' },
-      { to: '/san-pham?category=thiet-bi-ve-sinh', label: 'Thiết Bị Vệ Sinh' },
-      { to: '/san-pham?category=noi-that-go', label: 'Nội Thất Gỗ' },
-    ],
-  },
-  { to: '/gioi-thieu', label: 'Giới thiệu' },
-  { to: '/lien-he', label: 'Liên hệ' },
-];
+  return [
+    { to: '/', label: 'Trang chủ' },
+    {
+      label: 'Sản phẩm',
+      to: '/san-pham',
+      children: [
+        {
+          to: '/san-pham?category=gach-op-lat',
+          label: 'Gạch Ốp Lát',
+          children: tileSizeLinks,
+        },
+        { to: '/san-pham?category=son-nuoc', label: 'Sơn Nước' },
+        { to: '/san-pham?category=vat-lieu-chong-tham', label: 'Chống Thấm' },
+        { to: '/san-pham?category=thiet-bi-ve-sinh', label: 'Thiết Bị Vệ Sinh' },
+        { to: '/san-pham?category=noi-that-go', label: 'Nội Thất Gỗ' },
+      ],
+    },
+    { to: '/gioi-thieu', label: 'Giới thiệu' },
+    { to: '/lien-he', label: 'Liên hệ' },
+  ];
+}
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dropdown, setDropdown] = useState<string | null>(null);
   const [subDropdown, setSubDropdown] = useState<string | null>(null);
+  const [tileSizes, setTileSizes] = useState<TileSizeOption[]>(DEFAULT_TILE_SIZES);
   const location = useLocation();
+
+  const navLinks = useMemo(() => buildNavLinks(tileSizes), [tileSizes]);
+
+  useEffect(() => {
+    getTileSizes().then(setTileSizes);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -86,7 +96,7 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map((link) =>
+            {navLinks.map((link) =>
               link.children ? (
                 <div
                   key={link.label}
@@ -198,7 +208,7 @@ export function Navbar() {
         {mobileOpen && (
           <div className="md:hidden border-t border-gray-100 bg-white pb-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
             <div className="container mx-auto space-y-1 pt-3">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <div key={link.label}>
                   <NavLink
                     to={link.to}
