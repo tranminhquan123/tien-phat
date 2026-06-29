@@ -97,7 +97,7 @@ export function AdminContactsPage() {
                       {msg.email && <p className="text-xs text-gray-400">{msg.email}</p>}
                     </td>
                     <td className="px-4 py-3 max-w-xs">
-                      <p className="text-gray-700 line-clamp-2 text-xs leading-relaxed">{msg.message}</p>
+                      <p className="text-gray-700 line-clamp-3 whitespace-pre-line text-xs leading-relaxed">{msg.message}</p>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-gray-400 text-xs">
                       {new Date(msg.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -122,7 +122,6 @@ export function AdminContactsPage() {
       )}
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
 
-      {/* Detail modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelected(null)} />
@@ -140,11 +139,12 @@ export function AdminContactsPage() {
               </div>
               <div className="bg-gray-50 rounded-xl p-4">
                 <p className="text-xs text-gray-400 mb-1">Nội dung</p>
-                <p className="text-sm text-gray-800 leading-relaxed">{selected.message}</p>
+                <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">{selected.message}</p>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase">Ghi chú nội bộ</label>
-                <textarea className="field-input resize-none" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ghi chú về khách hàng này..." />
+                <textarea className={clsx('field-input resize-none', note.includes('[Hệ thống]') && 'border-amber-200 bg-amber-50/50')} rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ghi chú về khách hàng này..." />
+                {note.includes('[Hệ thống]') && <p className="mt-1.5 text-xs text-amber-700">Email thông báo chưa gửi thành công. Kiểm tra SMTP và dùng chức năng gửi email thử trong Cài đặt.</p>}
               </div>
               <div className="flex gap-2 flex-wrap">
                 {(['READING', 'REPLIED', 'CLOSED'] as const).map((s) => (
