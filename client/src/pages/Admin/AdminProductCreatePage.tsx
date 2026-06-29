@@ -4,12 +4,14 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ProductImageUrlInput } from '@/components/ProductImageUrlInput';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { getCategories } from '@/services/categoryService';
 import { adminCreateProduct } from '@/services/productService';
 import {
   getCategoryChildrenMap,
   type CategoryChildOption,
 } from '@/services/categoryChildService';
+import { isRichTextEmpty, sanitizeRichTextHtml } from '@/utils/richText';
 import type { Category } from '@/types';
 
 export function AdminProductCreatePage() {
@@ -70,11 +72,13 @@ export function AdminProductCreatePage() {
       sortOrder: index,
     }));
 
+    const description = sanitizeRichTextHtml(form.description);
+
     setSaving(true);
     try {
       await adminCreateProduct({
         name: form.name.trim(),
-        description: form.description.trim() || undefined,
+        description: isRichTextEmpty(description) ? undefined : description,
         price: form.price ? Number(form.price) : undefined,
         unit: form.unit.trim() || undefined,
         brand: form.brand.trim() || undefined,
@@ -96,11 +100,11 @@ export function AdminProductCreatePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-4xl">
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-black text-gray-900">Thêm sản phẩm</h1>
-          <p className="text-sm text-gray-400">Điền thông tin và chọn tối đa 12 hình ảnh trực tiếp từ máy tính</p>
+          <p className="text-sm text-gray-400">Điền thông tin, soạn mô tả và chọn tối đa 12 hình ảnh từ máy tính</p>
         </div>
         <Link to="/admin/san-pham" className="btn-outline py-2 text-sm">
           <ArrowLeft size={16} /> Quay lại
@@ -156,7 +160,15 @@ export function AdminProductCreatePage() {
           <div><Label>Thứ tự hiển thị</Label><input type="number" className="field-input" value={form.sortOrder} onChange={(event) => setForm((current) => ({ ...current, sortOrder: event.target.value }))} /></div>
         </div>
 
-        <div><Label>Mô tả</Label><textarea rows={4} className="field-input resize-none" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} /></div>
+        <div>
+          <Label>Mô tả sản phẩm</Label>
+          <RichTextEditor
+            value={form.description}
+            onChange={(description) => setForm((current) => ({ ...current, description }))}
+            placeholder="Nhập nội dung giới thiệu, ưu điểm, thông số và hướng dẫn sử dụng..."
+            minHeight={280}
+          />
+        </div>
 
         <ProductImageUrlInput value={form.imageUrls} onChange={(value) => setForm((current) => ({ ...current, imageUrls: value }))} />
 
