@@ -3,8 +3,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, X, Phone, ChevronDown, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
-import { DEFAULT_TILE_SIZES, type TileSizeOption } from '@/constants/tileSizes';
-import { getTileSizes } from '@/services/tileSizeService';
+import { getCategories } from '@/services/categoryService';
+import {
+  getCategoryChildrenMap,
+  type CategoryChildOption,
+} from '@/services/categoryChildService';
+import type { Category } from '@/types';
 
 type NavItem = {
   to: string;
@@ -12,28 +16,31 @@ type NavItem = {
   children?: NavItem[];
 };
 
-function buildNavLinks(tileSizes: TileSizeOption[]): NavItem[] {
-  const tileSizeLinks: NavItem[] = tileSizes.map((size) => ({
-    label: size.label,
-    to: `/san-pham?category=gach-op-lat&size=${size.value}`,
-  }));
+function buildNavLinks(
+  categories: Category[],
+  childrenBySlug: Record<string, CategoryChildOption[]>
+): NavItem[] {
+  const productCategories: NavItem[] = categories.map((category) => {
+    const children = childrenBySlug[category.slug] ?? [];
+
+    return {
+      label: category.name,
+      to: `/san-pham?category=${category.slug}`,
+      children: children.length > 0
+        ? children.map((child) => ({
+            label: child.label,
+            to: `/san-pham?category=${category.slug}&size=${encodeURIComponent(child.value)}`,
+          }))
+        : undefined,
+    };
+  });
 
   return [
     { to: '/', label: 'Trang chủ' },
     {
       label: 'Sản phẩm',
       to: '/san-pham',
-      children: [
-        {
-          to: '/san-pham?category=gach-op-lat',
-          label: 'Gạch Ốp Lát',
-          children: tileSizeLinks,
-        },
-        { to: '/san-pham?category=son-nuoc', label: 'Sơn Nước' },
-        { to: '/san-pham?category=vat-lieu-chong-tham', label: 'Chống Thấm' },
-        { to: '/san-pham?category=thiet-bi-ve-sinh', label: 'Thiết Bị Vệ Sinh' },
-        { to: '/san-pham?category=noi-that-go', label: 'Nội Thất Gỗ' },
-      ],
+      children: productCategories,
     },
     { to: '/gioi-thieu', label: 'Giới thiệu' },
     { to: '/lien-he', label: 'Liên hệ' },
@@ -45,13 +52,27 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [dropdown, setDropdown] = useState<string | null>(null);
   const [subDropdown, setSubDropdown] = useState<string | null>(null);
-  const [tileSizes, setTileSizes] = useState<TileSizeOption[]>(DEFAULT_TILE_SIZES);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [childrenBySlug, setChildrenBySlug] = useState<Record<string, CategoryChildOption[]>>({});
   const location = useLocation();
 
-  const navLinks = useMemo(() => buildNavLinks(tileSizes), [tileSizes]);
+  const navLinks = useMemo(
+    () => buildNavLinks(categories, childrenBySlug),
+    [categories, childrenBySlug]
+  );
 
   useEffect(() => {
-    getTileSizes().then(setTileSizes);
+    getCategories(true)
+      .then(async (response) => {
+        const list = response.data ?? [];
+        const childMap = await getCategoryChildrenMap(list.map((category) => category.slug));
+        setCategories(list);
+        setChildrenBySlug(childMap);
+      })
+      .catch(() => {
+        setCategories([]);
+        setChildrenBySlug({});
+      });
   }, []);
 
   useEffect(() => {
@@ -147,7 +168,7 @@ export function Navbar() {
                             </Link>
 
                             {child.children && subDropdown === child.label && (
-                              <div className="absolute left-full top-0 pl-2 w-48">
+                              <div className="absolute left-full top-0 pl-2 w-52">
                                 <div className="bg-white border border-gray-100 rounded-xl shadow-xl py-1 overflow-hidden">
                                   {child.children.map((subChild) => (
                                     <Link
