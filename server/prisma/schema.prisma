@@ -31,22 +31,25 @@ model Category {
 }
 
 model Product {
-  id          String      @id @default(uuid())
+  id          String         @id @default(uuid())
   name        String
-  slug        String      @unique
+  slug        String         @unique
   description String?
   price       Float?
-  unit        String?     // m², cái, bộ, thùng...
+  unit        String?        // m², cái, bộ, thùng...
   brand       String?
-  origin      String?     // Xuất xứ: Việt Nam, Ý, Tây Ban Nha...
+  origin      String?        // Xuất xứ: Việt Nam, Ý, Tây Ban Nha...
+  size        String?        // Kích thước gạch: 30x60, 60x60...
   categoryId  String
-  category    Category    @relation(fields: [categoryId], references: [id])
+  category    Category       @relation(fields: [categoryId], references: [id])
   images      ProductImage[]
-  isActive    Boolean     @default(true)
-  isFeatured  Boolean     @default(false)
-  sortOrder   Int         @default(0)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  isActive    Boolean        @default(true)
+  isFeatured  Boolean        @default(false)
+  sortOrder   Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([categoryId, size])
 }
 
 model ProductImage {
@@ -73,15 +76,15 @@ model Banner {
 }
 
 model ContactMessage {
-  id        String              @id @default(uuid())
+  id        String               @id @default(uuid())
   name      String
   phone     String
   email     String?
   message   String
   status    ContactMessageStatus @default(NEW)
-  note      String?             // Ghi chú nội bộ
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  note      String?              // Ghi chú nội bộ
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 }
 
 model SiteConfig {
