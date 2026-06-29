@@ -9,9 +9,9 @@ import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 
 import { getProductBySlug } from '@/services/productService';
+import { formatCategoryChildValue } from '@/services/categoryChildService';
 import { ProductCard } from '@/components/ProductCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { getTileSizeLabel } from '@/constants/tileSizes';
 import type { Product } from '@/types';
 
 export function ProductDetailPage() {
@@ -47,9 +47,10 @@ export function ProductDetailPage() {
   }
 
   const sortedImages = [...product.images].sort((a, b) => a.sortOrder - b.sortOrder);
-  const sizeLabel = getTileSizeLabel(product.size);
+  const childLabel = formatCategoryChildValue(product.category.slug, product.size);
+  const childFieldLabel = product.category.slug === 'gach-op-lat' ? 'Kích thước' : 'Danh mục cấp 2';
   const categoryLink = product.size
-    ? `/san-pham?category=${product.category.slug}&size=${product.size}`
+    ? `/san-pham?category=${product.category.slug}&size=${encodeURIComponent(product.size)}`
     : `/san-pham?category=${product.category.slug}`;
 
   return (
@@ -62,7 +63,7 @@ export function ProductDetailPage() {
         <Link to={categoryLink} className="hover:text-brand-600">
           {product.category.name}
         </Link>
-        {sizeLabel && <><span>/</span><span className="text-gray-600">{sizeLabel}</span></>}
+        {childLabel && <><span>/</span><span className="text-gray-600">{childLabel}</span></>}
         <span>/</span>
         <span className="text-gray-700 font-medium truncate max-w-xs">{product.name}</span>
       </div>
@@ -108,7 +109,7 @@ export function ProductDetailPage() {
 
         <div className="flex flex-col">
           <p className="text-brand-600 text-sm font-medium flex items-center gap-1 mb-2">
-            <Tag size={13} /> {product.category.name}{sizeLabel ? ` · ${sizeLabel}` : ''}
+            <Tag size={13} /> {product.category.name}{childLabel ? ` · ${childLabel}` : ''}
           </p>
           <h1 className="text-2xl font-black text-gray-900 mb-4 leading-snug">
             {product.name}
@@ -130,12 +131,12 @@ export function ProductDetailPage() {
           )}
 
           <div className="grid grid-cols-2 gap-3 mb-6">
-            {sizeLabel && (
+            {childLabel && (
               <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
                 <Maximize2 size={15} className="text-brand-500 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-400">Kích thước</p>
-                  <p className="text-sm font-semibold">{sizeLabel}</p>
+                  <p className="text-xs text-gray-400">{childFieldLabel}</p>
+                  <p className="text-sm font-semibold">{childLabel}</p>
                 </div>
               </div>
             )}
