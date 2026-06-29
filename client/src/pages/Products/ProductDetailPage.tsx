@@ -12,6 +12,7 @@ import { getProductBySlug } from '@/services/productService';
 import { formatCategoryChildValue } from '@/services/categoryChildService';
 import { ProductCard } from '@/components/ProductCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { prepareRichTextForDisplay } from '@/utils/richText';
 import type { Product } from '@/types';
 
 export function ProductDetailPage() {
@@ -49,6 +50,7 @@ export function ProductDetailPage() {
   const sortedImages = [...product.images].sort((a, b) => a.sortOrder - b.sortOrder);
   const childLabel = formatCategoryChildValue(product.category.slug, product.size);
   const childFieldLabel = product.category.slug === 'gach-op-lat' ? 'Kích thước' : 'Danh mục cấp 2';
+  const descriptionHtml = prepareRichTextForDisplay(product.description);
   const categoryLink = product.size
     ? `/san-pham?category=${product.category.slug}&size=${encodeURIComponent(product.size)}`
     : `/san-pham?category=${product.category.slug}`;
@@ -169,12 +171,13 @@ export function ProductDetailPage() {
             )}
           </div>
 
-          {product.description && (
-            <div className="mb-6">
-              <h3 className="font-bold text-gray-800 mb-2">Mô tả sản phẩm</h3>
-              <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
-                {product.description}
-              </p>
+          {descriptionHtml && (
+            <div className="mb-6 rounded-xl border border-gray-100 bg-gray-50/70 p-5">
+              <h2 className="mb-4 text-lg font-black text-gray-900">Mô tả sản phẩm</h2>
+              <div
+                className="rich-text-content text-[15px] text-gray-600"
+                dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+              />
             </div>
           )}
 
