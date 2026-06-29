@@ -15,14 +15,16 @@ export function AdminTileSizePanel({ sizes, onChange }: Props) {
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
 
-  async function persist(next: TileSizeOption[], message: string) {
+  async function persist(next: TileSizeOption[], message: string): Promise<boolean> {
     setSaving(true);
     try {
       await saveTileSizes(next);
       onChange(next);
       toast.success(message);
+      return true;
     } catch (error) {
       toast.error((error as Error).message);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -33,8 +35,8 @@ export function AdminTileSizePanel({ sizes, onChange }: Props) {
     const normalized = normalizeTileSize(newSize);
     if (!normalized) return toast.error('Nhập kích thước theo dạng 120 x 120');
     if (sizes.some((item) => item.value === normalized.value)) return toast.error('Kích thước này đã tồn tại');
-    await persist([...sizes, normalized], `Đã thêm ${normalized.label}`);
-    setNewSize('');
+    const saved = await persist([...sizes, normalized], `Đã thêm ${normalized.label}`);
+    if (saved) setNewSize('');
   }
 
   async function updateSize(originalValue: string) {
@@ -43,12 +45,14 @@ export function AdminTileSizePanel({ sizes, onChange }: Props) {
     if (normalized.value !== originalValue && sizes.some((item) => item.value === normalized.value)) {
       return toast.error('Kích thước này đã tồn tại');
     }
-    await persist(
+    const saved = await persist(
       sizes.map((item) => item.value === originalValue ? normalized : item),
       `Đã cập nhật thành ${normalized.label}`
     );
-    setEditingValue(null);
-    setDraft('');
+    if (saved) {
+      setEditingValue(null);
+      setDraft('');
+    }
   }
 
   async function removeSize(value: string) {
