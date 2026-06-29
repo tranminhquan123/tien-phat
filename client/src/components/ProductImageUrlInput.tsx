@@ -8,7 +8,7 @@ type Props = {
   onChange: (value: string) => void;
 };
 
-const MAX_IMAGES = 6;
+const MAX_IMAGES = 12;
 const MAX_SIZE = 12 * 1024 * 1024;
 const MAX_DIMENSION = 1600;
 
@@ -39,8 +39,19 @@ export function ProductImageUrlInput({ value, onChange }: Props) {
 
   async function selectImages(files: FileList | null) {
     if (!files?.length) return;
+
     const available = MAX_IMAGES - images.length;
-    const selected = Array.from(files).slice(0, available);
+    if (available <= 0) {
+      toast.error(`Chỉ được chọn tối đa ${MAX_IMAGES} ảnh`);
+      return;
+    }
+
+    const allSelected = Array.from(files);
+    const selected = allSelected.slice(0, available);
+
+    if (allSelected.length > available) {
+      toast(`Chỉ thêm ${available} ảnh để không vượt quá giới hạn ${MAX_IMAGES} ảnh`);
+    }
 
     if (selected.some((file) => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type))) {
       toast.error('Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP');
@@ -95,11 +106,15 @@ export function ProductImageUrlInput({ value, onChange }: Props) {
         className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-white px-4 py-5 text-sm font-semibold text-gray-600 hover:border-brand-400 hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Upload size={18} />
-        {loading ? 'Đang tối ưu ảnh...' : 'Chọn ảnh từ máy tính'}
+        {loading
+          ? 'Đang tối ưu ảnh...'
+          : images.length >= MAX_IMAGES
+            ? `Đã đủ ${MAX_IMAGES} ảnh`
+            : `Chọn ảnh từ máy tính (${images.length}/${MAX_IMAGES})`}
       </button>
 
       {images.length > 0 && (
-        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
           {images.map((image, index) => (
             <div key={index} className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-white">
               <img src={image} alt={`Ảnh ${index + 1}`} className="h-full w-full object-cover" />
