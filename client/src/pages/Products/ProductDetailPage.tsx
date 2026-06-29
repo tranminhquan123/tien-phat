@@ -312,7 +312,7 @@ export function ProductDetailPage() {
   );
 }
 
-type IconComponent = React.ComponentType<{ size?: number; className?: string }>;
+type IconComponent = typeof Maximize2;
 
 function InfoCard({ icon: Icon, label, value }: { icon: IconComponent; label: string; value: string }) {
   return (
