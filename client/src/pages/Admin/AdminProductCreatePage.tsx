@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { ProductImageUrlInput } from '@/components/ProductImageUrlInput';
 import { getCategories } from '@/services/categoryService';
 import { adminCreateProduct } from '@/services/productService';
+import { TILE_SIZES } from '@/constants/tileSizes';
 import type { Category } from '@/types';
 
 export function AdminProductCreatePage() {
@@ -13,7 +14,7 @@ export function AdminProductCreatePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    name: '', description: '', price: '', unit: '', brand: '', origin: '',
+    name: '', description: '', price: '', unit: '', brand: '', origin: '', size: '',
     categoryId: '', sortOrder: '0', imageUrls: '', isActive: true, isFeatured: false,
   });
 
@@ -25,11 +26,19 @@ export function AdminProductCreatePage() {
     }).catch((error) => toast.error((error as Error).message));
   }, []);
 
+  const selectedCategory = categories.find((category) => category.id === form.categoryId);
+  const isTileCategory = selectedCategory?.slug === 'gach-op-lat';
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
 
     if (!form.name.trim() || !form.categoryId) {
       toast.error('Nhập tên sản phẩm và chọn danh mục');
+      return;
+    }
+
+    if (isTileCategory && !form.size) {
+      toast.error('Hãy chọn kích thước gạch');
       return;
     }
 
@@ -58,6 +67,7 @@ export function AdminProductCreatePage() {
         unit: form.unit.trim() || undefined,
         brand: form.brand.trim() || undefined,
         origin: form.origin.trim() || undefined,
+        size: isTileCategory ? form.size : undefined,
         categoryId: form.categoryId,
         sortOrder: Number(form.sortOrder) || 0,
         isActive: form.isActive,
@@ -94,11 +104,34 @@ export function AdminProductCreatePage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Label required>Danh mục</Label>
-            <select className="field-input" value={form.categoryId} onChange={(event) => setForm((current) => ({ ...current, categoryId: event.target.value }))}>
+            <select
+              className="field-input"
+              value={form.categoryId}
+              onChange={(event) => {
+                const nextCategoryId = event.target.value;
+                const nextCategory = categories.find((category) => category.id === nextCategoryId);
+                setForm((current) => ({
+                  ...current,
+                  categoryId: nextCategoryId,
+                  size: nextCategory?.slug === 'gach-op-lat' ? current.size : '',
+                }));
+              }}
+            >
               <option value="">-- Chọn danh mục --</option>
               {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
             </select>
           </div>
+
+          {isTileCategory && (
+            <div>
+              <Label required>Kích thước</Label>
+              <select className="field-input" value={form.size} onChange={(event) => setForm((current) => ({ ...current, size: event.target.value }))}>
+                <option value="">-- Chọn kích thước --</option>
+                {TILE_SIZES.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
+              </select>
+            </div>
+          )}
+
           <div><Label>Thương hiệu</Label><input className="field-input" value={form.brand} onChange={(event) => setForm((current) => ({ ...current, brand: event.target.value }))} /></div>
           <div><Label>Giá</Label><input type="number" className="field-input" value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} /></div>
           <div><Label>Đơn vị</Label><input className="field-input" value={form.unit} onChange={(event) => setForm((current) => ({ ...current, unit: event.target.value }))} placeholder="m², thùng, cái..." /></div>
