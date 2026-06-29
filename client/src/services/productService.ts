@@ -14,6 +14,16 @@ interface ProductDetailResponse {
   };
 }
 
+type ProductMutationPayload = Omit<Partial<Product>, 'images' | 'size'> & {
+  size?: string | null;
+  images?: Array<{
+    url: string;
+    altText?: string;
+    isPrimary?: boolean;
+    sortOrder?: number;
+  }>;
+};
+
 export function getProducts(params: {
   category?: string;
   size?: string;
@@ -51,7 +61,6 @@ export async function getProductBySlug(slug: string) {
   };
 }
 
-// Admin
 export function adminGetProducts(params: {
   search?: string;
   categoryId?: string;
@@ -66,18 +75,11 @@ export function adminGetProducts(params: {
   return api.get<ProductListResponse>(`/products/admin/list?${qs.toString()}`);
 }
 
-export function adminCreateProduct(data: Omit<Partial<Product>, 'images'> & {
-  images?: Array<{
-    url: string;
-    altText?: string;
-    isPrimary?: boolean;
-    sortOrder?: number;
-  }>;
-}) {
+export function adminCreateProduct(data: ProductMutationPayload) {
   return api.post<{ success: boolean; data: Product }>('/products/admin', data);
 }
 
-export function adminUpdateProduct(id: string, data: Partial<Product>) {
+export function adminUpdateProduct(id: string, data: ProductMutationPayload) {
   return api.put<{ success: boolean; data: Product }>(`/products/admin/${id}`, data);
 }
 
