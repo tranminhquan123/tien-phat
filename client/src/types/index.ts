@@ -29,6 +29,7 @@ export interface Product {
   unit?: string;
   brand?: string;
   origin?: string;
+  size?: string;
   categoryId: string;
   category: Pick<Category, 'id' | 'name' | 'slug'>;
   images: ProductImage[];
