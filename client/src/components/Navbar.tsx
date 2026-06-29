@@ -1,16 +1,32 @@
 // src/components/Navbar.tsx
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, Phone, ChevronDown } from 'lucide-react';
+import { Menu, X, Phone, ChevronDown, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
+import { TILE_SIZES } from '@/constants/tileSizes';
 
-const NAV_LINKS = [
+type NavItem = {
+  to: string;
+  label: string;
+  children?: NavItem[];
+};
+
+const TILE_SIZE_LINKS: NavItem[] = TILE_SIZES.map((size) => ({
+  label: size.label,
+  to: `/san-pham?category=gach-op-lat&size=${size.value}`,
+}));
+
+const NAV_LINKS: NavItem[] = [
   { to: '/', label: 'Trang chủ' },
   {
     label: 'Sản phẩm',
     to: '/san-pham',
     children: [
-      { to: '/san-pham?category=gach-op-lat', label: 'Gạch Ốp Lát' },
+      {
+        to: '/san-pham?category=gach-op-lat',
+        label: 'Gạch Ốp Lát',
+        children: TILE_SIZE_LINKS,
+      },
       { to: '/san-pham?category=son-nuoc', label: 'Sơn Nước' },
       { to: '/san-pham?category=vat-lieu-chong-tham', label: 'Chống Thấm' },
       { to: '/san-pham?category=thiet-bi-ve-sinh', label: 'Thiết Bị Vệ Sinh' },
@@ -25,6 +41,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dropdown, setDropdown] = useState<string | null>(null);
+  const [subDropdown, setSubDropdown] = useState<string | null>(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -36,11 +53,11 @@ export function Navbar() {
   useEffect(() => {
     setMobileOpen(false);
     setDropdown(null);
+    setSubDropdown(null);
   }, [location]);
 
   return (
     <>
-      {/* Top bar */}
       <div className="bg-brand-700 text-white text-sm py-1.5 hidden md:block">
         <div className="container mx-auto flex justify-between items-center">
           <span className="opacity-90">Thứ 2 – Thứ 6: 7:30 – 17:30 | 137 Đường Liên Phường, Phường Phước Long, TP.HCM</span>
@@ -51,7 +68,6 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Main nav */}
       <header
         className={clsx(
           'sticky top-0 z-50 bg-white transition-shadow duration-300',
@@ -59,7 +75,6 @@ export function Navbar() {
         )}
       >
         <div className="container mx-auto flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-black text-lg leading-none">TP</span>
@@ -70,7 +85,6 @@ export function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map((link) =>
               link.children ? (
@@ -78,11 +92,15 @@ export function Navbar() {
                   key={link.label}
                   className="relative"
                   onMouseEnter={() => setDropdown(link.label)}
-                  onMouseLeave={() => setDropdown(null)}
+                  onMouseLeave={() => {
+                    setDropdown(null);
+                    setSubDropdown(null);
+                  }}
                   onFocus={() => setDropdown(link.label)}
                   onBlur={(event) => {
                     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
                       setDropdown(null);
+                      setSubDropdown(null);
                     }
                   }}
                 >
@@ -100,17 +118,40 @@ export function Navbar() {
                     {link.label}
                     <ChevronDown size={14} className={clsx('transition-transform', dropdown === link.label && 'rotate-180')} />
                   </NavLink>
+
                   {dropdown === link.label && (
-                    <div className="absolute top-full left-0 pt-2 w-56 z-50">
-                      <div className="bg-white border border-gray-100 rounded-xl shadow-xl py-1 overflow-hidden">
+                    <div className="absolute top-full left-0 pt-2 w-60 z-50">
+                      <div className="bg-white border border-gray-100 rounded-xl shadow-xl py-1 overflow-visible">
                         {link.children.map((child) => (
-                          <Link
+                          <div
                             key={child.to}
-                            to={child.to}
-                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-colors"
+                            className="relative"
+                            onMouseEnter={() => setSubDropdown(child.children ? child.label : null)}
                           >
-                            {child.label}
-                          </Link>
+                            <Link
+                              to={child.to}
+                              className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-colors"
+                            >
+                              <span>{child.label}</span>
+                              {child.children && <ChevronRight size={15} />}
+                            </Link>
+
+                            {child.children && subDropdown === child.label && (
+                              <div className="absolute left-full top-0 pl-2 w-48">
+                                <div className="bg-white border border-gray-100 rounded-xl shadow-xl py-1 overflow-hidden">
+                                  {child.children.map((subChild) => (
+                                    <Link
+                                      key={subChild.to}
+                                      to={subChild.to}
+                                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-colors"
+                                    >
+                                      {subChild.label}
+                                    </Link>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -136,7 +177,6 @@ export function Navbar() {
             )}
           </nav>
 
-          {/* CTA + Mobile button */}
           <div className="flex items-center gap-3">
             <a
               href="tel:0764432015"
@@ -155,9 +195,8 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-gray-100 bg-white pb-4">
+          <div className="md:hidden border-t border-gray-100 bg-white pb-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
             <div className="container mx-auto space-y-1 pt-3">
               {NAV_LINKS.map((link) => (
                 <div key={link.label}>
@@ -173,17 +212,30 @@ export function Navbar() {
                   >
                     {link.label}
                   </NavLink>
+
                   {link.children?.map((child) => (
-                    <Link
-                      key={child.to}
-                      to={child.to}
-                      className="block pl-8 pr-4 py-2 text-sm text-gray-500 hover:text-brand-600"
-                    >
-                      {child.label}
-                    </Link>
+                    <div key={child.to}>
+                      <Link
+                        to={child.to}
+                        className="flex items-center justify-between pl-8 pr-4 py-2 text-sm text-gray-500 hover:text-brand-600"
+                      >
+                        <span>{child.label}</span>
+                        {child.children && <ChevronDown size={14} />}
+                      </Link>
+                      {child.children?.map((subChild) => (
+                        <Link
+                          key={subChild.to}
+                          to={subChild.to}
+                          className="block pl-12 pr-4 py-1.5 text-sm text-gray-400 hover:text-brand-600"
+                        >
+                          {subChild.label}
+                        </Link>
+                      ))}
+                    </div>
                   ))}
                 </div>
               ))}
+
               <div className="pt-2 px-4">
                 <a
                   href="tel:0764432015"
