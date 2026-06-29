@@ -6,12 +6,17 @@ import toast from 'react-hot-toast';
 import { ProductImageUrlInput } from '@/components/ProductImageUrlInput';
 import { getCategories } from '@/services/categoryService';
 import { adminCreateProduct } from '@/services/productService';
-import { TILE_SIZES } from '@/constants/tileSizes';
+import { getTileSizes } from '@/services/tileSizeService';
+import {
+  DEFAULT_TILE_SIZES,
+  type TileSizeOption,
+} from '@/constants/tileSizes';
 import type { Category } from '@/types';
 
 export function AdminProductCreatePage() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [tileSizes, setTileSizes] = useState<TileSizeOption[]>(DEFAULT_TILE_SIZES);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: '', description: '', price: '', unit: '', brand: '', origin: '', size: '',
@@ -19,11 +24,17 @@ export function AdminProductCreatePage() {
   });
 
   useEffect(() => {
-    getCategories().then((result) => {
-      const list = result.data ?? [];
-      setCategories(list);
-      setForm((current) => ({ ...current, categoryId: current.categoryId || list[0]?.id || '' }));
-    }).catch((error) => toast.error((error as Error).message));
+    Promise.all([getCategories(), getTileSizes()])
+      .then(([categoryResult, sizes]) => {
+        const list = categoryResult.data ?? [];
+        setCategories(list);
+        setTileSizes(sizes);
+        setForm((current) => ({
+          ...current,
+          categoryId: current.categoryId || list[0]?.id || '',
+        }));
+      })
+      .catch((error) => toast.error((error as Error).message));
   }, []);
 
   const selectedCategory = categories.find((category) => category.id === form.categoryId);
@@ -88,7 +99,7 @@ export function AdminProductCreatePage() {
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-black text-gray-900">Thêm sản phẩm</h1>
-          <p className="text-sm text-gray-400">Điền thông tin và chọn hình ảnh trực tiếp từ máy tính</p>
+          <p className="text-sm text-gray-400">Điền thông tin và chọn tối đa 12 hình ảnh trực tiếp từ máy tính</p>
         </div>
         <Link to="/admin/san-pham" className="btn-outline py-2 text-sm">
           <ArrowLeft size={16} /> Quay lại
@@ -127,8 +138,11 @@ export function AdminProductCreatePage() {
               <Label required>Kích thước</Label>
               <select className="field-input" value={form.size} onChange={(event) => setForm((current) => ({ ...current, size: event.target.value }))}>
                 <option value="">-- Chọn kích thước --</option>
-                {TILE_SIZES.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
+                {tileSizes.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
               </select>
+              <Link to="/admin/kich-thuoc" className="mt-1 inline-block text-xs font-medium text-brand-600 hover:underline">
+                Quản lý danh sách kích thước
+              </Link>
             </div>
           )}
 
