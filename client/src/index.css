@@ -37,18 +37,29 @@
   }
 
   .rich-text-editor-content p,
-  .rich-text-content p {
+  .rich-text-editor-content > div,
+  .rich-text-content p,
+  .rich-text-content > div {
     @apply mb-3;
   }
 
   .rich-text-editor-content p:last-child,
-  .rich-text-content p:last-child {
+  .rich-text-editor-content > div:last-child,
+  .rich-text-content p:last-child,
+  .rich-text-content > div:last-child {
     @apply mb-0;
   }
 
   .rich-text-editor-content h2,
   .rich-text-content h2 {
     @apply mb-3 mt-6 text-xl font-black leading-snug text-gray-900;
+  }
+
+  .rich-text-editor-content h2:first-child,
+  .rich-text-content h2:first-child,
+  .rich-text-editor-content h3:first-child,
+  .rich-text-content h3:first-child {
+    @apply mt-0;
   }
 
   .rich-text-editor-content h3,
