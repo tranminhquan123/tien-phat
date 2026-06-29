@@ -140,8 +140,8 @@ export function AdminProductCreatePage() {
                 <option value="">-- Chọn kích thước --</option>
                 {tileSizes.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
               </select>
-              <Link to="/admin/kich-thuoc" className="mt-1 inline-block text-xs font-medium text-brand-600 hover:underline">
-                Quản lý danh sách kích thước
+              <Link to="/admin/danh-muc" className="mt-1 inline-block text-xs font-medium text-brand-600 hover:underline">
+                Quản lý kích thước trong danh mục Gạch Ốp Lát
               </Link>
             </div>
           )}
