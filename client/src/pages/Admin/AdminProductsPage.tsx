@@ -6,9 +6,14 @@ import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import { adminGetProducts, adminUpdateProduct, adminDeleteProduct } from '@/services/productService';
 import { getCategories } from '@/services/categoryService';
+import { getTileSizes } from '@/services/tileSizeService';
 import { LoadingSpinner, EmptyState } from '@/components/LoadingSpinner';
 import { Pagination } from '@/components/Pagination';
-import { TILE_SIZES, getTileSizeLabel } from '@/constants/tileSizes';
+import {
+  DEFAULT_TILE_SIZES,
+  getTileSizeLabel,
+  type TileSizeOption,
+} from '@/constants/tileSizes';
 import type { Product, Category } from '@/types';
 
 type FormData = {
@@ -43,6 +48,7 @@ export function AdminProductsPage() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [tileSizes, setTileSizes] = useState<TileSizeOption[]>(DEFAULT_TILE_SIZES);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
@@ -60,6 +66,10 @@ export function AdminProductsPage() {
   const selectedFormCategory = categories.find((category) => category.id === form.categoryId);
   const isTileFilter = selectedFilterCategory?.slug === 'gach-op-lat';
   const isTileForm = selectedFormCategory?.slug === 'gach-op-lat';
+
+  const formTileSizes = form.size && !tileSizes.some((size) => size.value === form.size)
+    ? [{ value: form.size, label: getTileSizeLabel(form.size) }, ...tileSizes]
+    : tileSizes;
 
   const fetchProducts = useCallback(() => {
     setLoading(true);
@@ -80,8 +90,11 @@ export function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
   useEffect(() => {
-    getCategories()
-      .then((result) => setCategories(result.data ?? []))
+    Promise.all([getCategories(), getTileSizes()])
+      .then(([categoryResult, sizes]) => {
+        setCategories(categoryResult.data ?? []);
+        setTileSizes(sizes);
+      })
       .catch((error) => toast.error((error as Error).message));
   }, []);
 
@@ -206,7 +219,7 @@ export function AdminProductsPage() {
             className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none"
           >
             <option value="">Tất cả kích thước</option>
-            {TILE_SIZES.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
+            {tileSizes.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
           </select>
         )}
       </div>
@@ -307,7 +320,7 @@ export function AdminProductsPage() {
                 <FieldLabel required>Kích thước</FieldLabel>
                 <select className="field-input" value={form.size} onChange={(event) => setForm((current) => ({ ...current, size: event.target.value }))}>
                   <option value="">-- Chọn kích thước --</option>
-                  {TILE_SIZES.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
+                  {formTileSizes.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
                 </select>
               </div>
             )}
