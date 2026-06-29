@@ -5,6 +5,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ProductImageUrlInput } from '@/components/ProductImageUrlInput';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import {
+  EMPTY_PRODUCT_SPECIFICATIONS,
+  ProductSpecificationFields,
+  specificationPayload,
+  type ProductSpecificationForm,
+} from '@/components/ProductSpecificationFields';
 import { getCategories } from '@/services/categoryService';
 import { adminCreateProduct } from '@/services/productService';
 import {
@@ -18,6 +24,7 @@ export function AdminProductCreatePage() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [childrenBySlug, setChildrenBySlug] = useState<Record<string, CategoryChildOption[]>>({});
+  const [specifications, setSpecifications] = useState<ProductSpecificationForm>(EMPTY_PRODUCT_SPECIFICATIONS);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: '', description: '', price: '', unit: '', brand: '', origin: '', size: '',
@@ -42,6 +49,7 @@ export function AdminProductCreatePage() {
   const selectedCategory = categories.find((category) => category.id === form.categoryId);
   const childOptions = selectedCategory ? childrenBySlug[selectedCategory.slug] ?? [] : [];
   const childFieldLabel = selectedCategory?.slug === 'gach-op-lat' ? 'Kích thước' : 'Danh mục cấp 2';
+  const isTileCategory = selectedCategory?.slug === 'gach-op-lat';
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -73,6 +81,9 @@ export function AdminProductCreatePage() {
     }));
 
     const description = sanitizeRichTextHtml(form.description);
+    const technicalSpecifications = isTileCategory
+      ? specificationPayload(specifications, undefined)
+      : {};
 
     setSaving(true);
     try {
@@ -88,6 +99,7 @@ export function AdminProductCreatePage() {
         sortOrder: Number(form.sortOrder) || 0,
         isActive: form.isActive,
         isFeatured: form.isFeatured,
+        ...technicalSpecifications,
         images,
       });
       toast.success('Đã thêm sản phẩm và hình ảnh');
@@ -104,7 +116,7 @@ export function AdminProductCreatePage() {
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-black text-gray-900">Thêm sản phẩm</h1>
-          <p className="text-sm text-gray-400">Điền thông tin, soạn mô tả và chọn tối đa 12 hình ảnh từ máy tính</p>
+          <p className="text-sm text-gray-400">Điền thông tin, thông số kỹ thuật, mô tả và tối đa 12 hình ảnh</p>
         </div>
         <Link to="/admin/san-pham" className="btn-outline py-2 text-sm">
           <ArrowLeft size={16} /> Quay lại
@@ -160,12 +172,16 @@ export function AdminProductCreatePage() {
           <div><Label>Thứ tự hiển thị</Label><input type="number" className="field-input" value={form.sortOrder} onChange={(event) => setForm((current) => ({ ...current, sortOrder: event.target.value }))} /></div>
         </div>
 
+        {isTileCategory && (
+          <ProductSpecificationFields value={specifications} onChange={setSpecifications} />
+        )}
+
         <div>
           <Label>Mô tả sản phẩm</Label>
           <RichTextEditor
             value={form.description}
             onChange={(description) => setForm((current) => ({ ...current, description }))}
-            placeholder="Nhập nội dung giới thiệu, ưu điểm, thông số và hướng dẫn sử dụng..."
+            placeholder="Nhập nội dung giới thiệu, ưu điểm và hướng dẫn sử dụng..."
             minHeight={280}
           />
         </div>
