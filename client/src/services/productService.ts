@@ -14,8 +14,19 @@ interface ProductDetailResponse {
   };
 }
 
-type ProductMutationPayload = Omit<Partial<Product>, 'images' | 'size'> & {
+type ProductMutationPayload = Omit<Partial<Product>, 'images' | 'size' | 'color' | 'productType' | 'surface' | 'glaze' | 'application' | 'pattern' | 'spaces' | 'collection' | 'faceCount' | 'piecesPerBox' | 'areaPerBox'> & {
   size?: string | null;
+  color?: string | null;
+  productType?: string | null;
+  surface?: string | null;
+  glaze?: string | null;
+  application?: string | null;
+  pattern?: string | null;
+  spaces?: string | null;
+  collection?: string | null;
+  faceCount?: number | null;
+  piecesPerBox?: number | null;
+  areaPerBox?: number | null;
   images?: Array<{
     url: string;
     altText?: string;
