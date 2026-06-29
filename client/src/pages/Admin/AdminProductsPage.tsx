@@ -13,6 +13,8 @@ import {
 import { getTileSizeLabel } from '@/constants/tileSizes';
 import { LoadingSpinner, EmptyState } from '@/components/LoadingSpinner';
 import { Pagination } from '@/components/Pagination';
+import { RichTextEditor } from '@/components/RichTextEditor';
+import { isRichTextEmpty, sanitizeRichTextHtml } from '@/utils/richText';
 import type { Product, Category } from '@/types';
 
 type FormData = {
@@ -130,11 +132,13 @@ export function AdminProductsPage() {
       return;
     }
 
+    const description = sanitizeRichTextHtml(form.description);
+
     setSaving(true);
     try {
       await adminUpdateProduct(editingId, {
         name: form.name,
-        description: form.description || undefined,
+        description: isRichTextEmpty(description) ? undefined : description,
         price: form.price ? parseFloat(form.price) : undefined,
         unit: form.unit || undefined,
         brand: form.brand || undefined,
@@ -335,7 +339,17 @@ export function AdminProductsPage() {
             <div><FieldLabel>Đơn vị</FieldLabel><input className="field-input" value={form.unit} onChange={(event) => setForm((current) => ({ ...current, unit: event.target.value }))} /></div>
             <div><FieldLabel>Xuất xứ</FieldLabel><input className="field-input" value={form.origin} onChange={(event) => setForm((current) => ({ ...current, origin: event.target.value }))} /></div>
             <div><FieldLabel>Thứ tự hiển thị</FieldLabel><input type="number" className="field-input" value={form.sortOrder} onChange={(event) => setForm((current) => ({ ...current, sortOrder: event.target.value }))} /></div>
-            <div className="md:col-span-2"><FieldLabel>Mô tả</FieldLabel><textarea className="field-input resize-none" rows={3} value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} /></div>
+
+            <div className="md:col-span-2">
+              <FieldLabel>Mô tả sản phẩm</FieldLabel>
+              <RichTextEditor
+                value={form.description}
+                onChange={(description) => setForm((current) => ({ ...current, description }))}
+                placeholder="Nhập nội dung giới thiệu, ưu điểm, thông số và hướng dẫn sử dụng..."
+                minHeight={260}
+              />
+            </div>
+
             <div className="flex gap-6 md:col-span-2">
               <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm((current) => ({ ...current, isActive: event.target.checked }))} className="h-4 w-4 accent-brand-600" /><span className="text-sm font-medium text-gray-700">Hiển thị trên website</span></label>
               <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={form.isFeatured} onChange={(event) => setForm((current) => ({ ...current, isFeatured: event.target.checked }))} className="h-4 w-4 accent-brand-600" /><span className="text-sm font-medium text-gray-700">Sản phẩm nổi bật</span></label>
@@ -349,7 +363,7 @@ export function AdminProductsPage() {
       )}
 
       {deleteId && (
-        <Modal title="Xác nhận xóa" onClose={() => setDeleteId(null)}>
+        <Modal title="Xác nhận xóa" onClose={() => setDeleteId(null)} compact>
           <p className="mb-6 text-gray-600">Bạn có chắc muốn xóa sản phẩm này? Hành động này không thể hoàn tác.</p>
           <div className="flex justify-end gap-3">
             <button onClick={() => setDeleteId(null)} className="btn-outline py-2 text-sm">Hủy</button>
@@ -374,12 +388,25 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
   return <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-600">{children}{required && <span className="ml-0.5 text-red-500">*</span>}</label>;
 }
 
-function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+function Modal({
+  title,
+  children,
+  onClose,
+  compact = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  onClose: () => void;
+  compact?: boolean;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={clsx('relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl')}>
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+      <div className={clsx(
+        'relative max-h-[92vh] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl',
+        compact ? 'max-w-xl' : 'max-w-4xl'
+      )}>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
           <h3 className="font-black text-gray-900">{title}</h3>
           <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-xl font-bold text-gray-400 hover:bg-gray-100 hover:text-gray-600">×</button>
         </div>
