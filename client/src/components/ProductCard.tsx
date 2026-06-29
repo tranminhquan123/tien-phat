@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { Tag, ExternalLink, Package } from 'lucide-react';
 import clsx from 'clsx';
+import { getTileSizeLabel } from '@/constants/tileSizes';
 import type { Product } from '@/types';
 
 interface ProductCardProps {
@@ -13,6 +14,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const images = Array.isArray(product.images) ? product.images : [];
   const primaryImage = images.find((img) => img.isPrimary) ?? images[0];
   const categoryName = product.category?.name ?? 'Sản phẩm';
+  const meta = [getTileSizeLabel(product.size), product.brand, product.origin].filter(Boolean);
 
   return (
     <Link
@@ -56,10 +58,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
           {product.name}
         </h3>
 
-        {(product.brand || product.origin) && (
-          <p className="text-xs text-gray-400">
-            {[product.brand, product.origin].filter(Boolean).join(' · ')}
-          </p>
+        {meta.length > 0 && (
+          <p className="text-xs text-gray-400">{meta.join(' · ')}</p>
         )}
 
         {product.price ? (
