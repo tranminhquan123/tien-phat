@@ -8,6 +8,7 @@ import { adminGetProducts, adminUpdateProduct, adminDeleteProduct } from '@/serv
 import { getCategories } from '@/services/categoryService';
 import { LoadingSpinner, EmptyState } from '@/components/LoadingSpinner';
 import { Pagination } from '@/components/Pagination';
+import { TILE_SIZES, getTileSizeLabel } from '@/constants/tileSizes';
 import type { Product, Category } from '@/types';
 
 type FormData = {
@@ -17,6 +18,7 @@ type FormData = {
   unit: string;
   brand: string;
   origin: string;
+  size: string;
   categoryId: string;
   isActive: boolean;
   isFeatured: boolean;
@@ -30,6 +32,7 @@ const EMPTY_FORM: FormData = {
   unit: '',
   brand: '',
   origin: '',
+  size: '',
   categoryId: '',
   isActive: true,
   isFeatured: false,
@@ -45,6 +48,7 @@ export function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [filterCatId, setFilterCatId] = useState('');
+  const [filterSize, setFilterSize] = useState('');
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,9 +56,19 @@ export function AdminProductsPage() {
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  const selectedFilterCategory = categories.find((category) => category.id === filterCatId);
+  const selectedFormCategory = categories.find((category) => category.id === form.categoryId);
+  const isTileFilter = selectedFilterCategory?.slug === 'gach-op-lat';
+  const isTileForm = selectedFormCategory?.slug === 'gach-op-lat';
+
   const fetchProducts = useCallback(() => {
     setLoading(true);
-    adminGetProducts({ search: search || undefined, categoryId: filterCatId || undefined, page })
+    adminGetProducts({
+      search: search || undefined,
+      categoryId: filterCatId || undefined,
+      size: filterSize || undefined,
+      page,
+    })
       .then((result) => {
         setProducts(result.products ?? []);
         setTotal(result.total);
@@ -62,7 +76,7 @@ export function AdminProductsPage() {
       })
       .catch((error) => toast.error((error as Error).message))
       .finally(() => setLoading(false));
-  }, [search, filterCatId, page]);
+  }, [search, filterCatId, filterSize, page]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
   useEffect(() => {
@@ -80,6 +94,7 @@ export function AdminProductsPage() {
       unit: product.unit ?? '',
       brand: product.brand ?? '',
       origin: product.origin ?? '',
+      size: product.size ?? '',
       categoryId: product.categoryId,
       isActive: product.isActive,
       isFeatured: product.isFeatured,
@@ -94,6 +109,11 @@ export function AdminProductsPage() {
       return;
     }
 
+    if (isTileForm && !form.size) {
+      toast.error('Hãy chọn kích thước gạch');
+      return;
+    }
+
     setSaving(true);
     try {
       await adminUpdateProduct(editingId, {
@@ -103,6 +123,7 @@ export function AdminProductsPage() {
         unit: form.unit || undefined,
         brand: form.brand || undefined,
         origin: form.origin || undefined,
+        size: isTileForm ? form.size : null,
         categoryId: form.categoryId,
         isActive: form.isActive,
         isFeatured: form.isFeatured,
@@ -151,7 +172,7 @@ export function AdminProductsPage() {
         </button>
       </div>
 
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <div className="relative max-w-xs flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -162,14 +183,32 @@ export function AdminProductsPage() {
             className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-brand-400 focus:outline-none"
           />
         </div>
+
         <select
           value={filterCatId}
-          onChange={(event) => { setFilterCatId(event.target.value); setPage(1); }}
+          onChange={(event) => {
+            const categoryId = event.target.value;
+            const category = categories.find((item) => item.id === categoryId);
+            setFilterCatId(categoryId);
+            if (category?.slug !== 'gach-op-lat') setFilterSize('');
+            setPage(1);
+          }}
           className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none"
         >
           <option value="">Tất cả danh mục</option>
           {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
         </select>
+
+        {isTileFilter && (
+          <select
+            value={filterSize}
+            onChange={(event) => { setFilterSize(event.target.value); setPage(1); }}
+            className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none"
+          >
+            <option value="">Tất cả kích thước</option>
+            {TILE_SIZES.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
+          </select>
+        )}
       </div>
 
       {loading ? (
@@ -182,7 +221,7 @@ export function AdminProductsPage() {
             <table className="w-full text-sm">
               <thead className="border-b border-gray-100 bg-gray-50">
                 <tr>
-                  {['Sản phẩm', 'Danh mục', 'Giá', 'Nổi bật', 'Trạng thái', 'Thao tác'].map((heading) => (
+                  {['Sản phẩm', 'Danh mục', 'Kích thước', 'Giá', 'Nổi bật', 'Trạng thái', 'Thao tác'].map((heading) => (
                     <th key={heading} className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                       {heading}
                     </th>
@@ -206,6 +245,7 @@ export function AdminProductsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3"><span className="badge bg-gray-100 text-gray-600">{product.category.name}</span></td>
+                      <td className="px-4 py-3 whitespace-nowrap text-gray-600">{getTileSizeLabel(product.size) || '—'}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-gray-700">
                         {product.price ? `${new Intl.NumberFormat('vi-VN').format(product.price)}đ` : <span className="text-xs italic text-gray-400">Liên hệ</span>}
                       </td>
@@ -245,11 +285,32 @@ export function AdminProductsPage() {
             </div>
             <div>
               <FieldLabel required>Danh mục</FieldLabel>
-              <select className="field-input" value={form.categoryId} onChange={(event) => setForm((current) => ({ ...current, categoryId: event.target.value }))}>
+              <select
+                className="field-input"
+                value={form.categoryId}
+                onChange={(event) => {
+                  const categoryId = event.target.value;
+                  const category = categories.find((item) => item.id === categoryId);
+                  setForm((current) => ({
+                    ...current,
+                    categoryId,
+                    size: category?.slug === 'gach-op-lat' ? current.size : '',
+                  }));
+                }}
+              >
                 <option value="">-- Chọn danh mục --</option>
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
               </select>
             </div>
+            {isTileForm && (
+              <div>
+                <FieldLabel required>Kích thước</FieldLabel>
+                <select className="field-input" value={form.size} onChange={(event) => setForm((current) => ({ ...current, size: event.target.value }))}>
+                  <option value="">-- Chọn kích thước --</option>
+                  {TILE_SIZES.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
+                </select>
+              </div>
+            )}
             <div><FieldLabel>Thương hiệu</FieldLabel><input className="field-input" value={form.brand} onChange={(event) => setForm((current) => ({ ...current, brand: event.target.value }))} /></div>
             <div><FieldLabel>Giá (VNĐ)</FieldLabel><input type="number" className="field-input" value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} /></div>
             <div><FieldLabel>Đơn vị</FieldLabel><input className="field-input" value={form.unit} onChange={(event) => setForm((current) => ({ ...current, unit: event.target.value }))} /></div>
