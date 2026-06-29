@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Package, FolderOpen, MessageSquare,
-  Settings, LogOut, Menu, ChevronRight, Globe2, PlusCircle,
+  Settings, LogOut, Menu, ChevronRight, Globe2, PlusCircle, Ruler,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { to: '/admin/san-pham', label: 'Sản phẩm', icon: Package, end: true },
   { to: '/admin/san-pham/them-moi', label: 'Thêm sản phẩm', icon: PlusCircle },
   { to: '/admin/danh-muc', label: 'Danh mục', icon: FolderOpen },
+  { to: '/admin/kich-thuoc', label: 'Kích thước gạch', icon: Ruler },
   { to: '/admin/lien-he', label: 'Liên hệ', icon: MessageSquare },
   { to: '/admin/cai-dat', label: 'Cài đặt', icon: Settings },
 ];
@@ -29,7 +30,6 @@ export function AdminLayout() {
 
   const Sidebar = () => (
     <aside className="flex flex-col h-full bg-dark-900 text-gray-300 w-64 shrink-0">
-      {/* Logo */}
       <div className="px-6 py-5 border-b border-white/10">
         <Link to="/" className="flex items-center gap-2 group" onClick={() => setSidebarOpen(false)}>
           <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
@@ -42,8 +42,7 @@ export function AdminLayout() {
         </Link>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -66,7 +65,6 @@ export function AdminLayout() {
         ))}
       </nav>
 
-      {/* Website + User + logout */}
       <div className="px-3 py-4 border-t border-white/10">
         <Link
           to="/"
@@ -93,12 +91,10 @@ export function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Desktop sidebar */}
       <div className="hidden md:flex">
         <Sidebar />
       </div>
 
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
@@ -108,9 +104,7 @@ export function AdminLayout() {
         </div>
       )}
 
-      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile topbar */}
         <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -125,7 +119,6 @@ export function AdminLayout() {
           </Link>
         </div>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
         </main>
