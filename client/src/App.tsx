@@ -22,6 +22,7 @@ import { DashboardPage } from '@/pages/Admin/DashboardPage';
 import { AdminProductsPage } from '@/pages/Admin/AdminProductsPage';
 import { AdminProductCreatePage } from '@/pages/Admin/AdminProductCreatePage';
 import { AdminCategoriesPage } from '@/pages/Admin/AdminCategoriesPage';
+import { AdminTileSizesPage } from '@/pages/Admin/AdminTileSizesPage';
 import { AdminContactsPage } from '@/pages/Admin/AdminContactsPage';
 import { AdminSettingsPage } from '@/pages/Admin/AdminSettingsPage';
 
@@ -57,6 +58,7 @@ export function App() {
           <Route path="san-pham" element={<AdminProductsPage />} />
           <Route path="san-pham/them-moi" element={<AdminProductCreatePage />} />
           <Route path="danh-muc" element={<AdminCategoriesPage />} />
+          <Route path="kich-thuoc" element={<AdminTileSizesPage />} />
           <Route path="lien-he" element={<AdminContactsPage />} />
           <Route path="cai-dat" element={<AdminSettingsPage />} />
         </Route>
