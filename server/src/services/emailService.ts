@@ -24,6 +24,20 @@ type EmailResult = {
   error?: string;
 };
 
+type EmailMessage = {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  replyTo?: string;
+  idempotencyKey?: string;
+};
+
+type ResendErrorResponse = {
+  message?: string;
+  name?: string;
+};
+
 let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
 
 function getTransporter() {
@@ -31,10 +45,12 @@ function getTransporter() {
 
   const host = process.env.SMTP_HOST?.trim();
   const user = process.env.SMTP_USER?.trim();
-  const pass = process.env.SMTP_PASS?.trim();
+  const pass = process.env.SMTP_PASS?.trim().replace(/\s+/g, '');
   const port = Number(process.env.SMTP_PORT || 587);
 
-  if (!host || !user || !pass) return null;
+  if (!host || !user || !pass || !Number.isInteger(port) || port <= 0) {
+    return null;
+  }
 
   transporter = nodemailer.createTransport({
     host,
@@ -47,6 +63,20 @@ function getTransporter() {
   });
 
   return transporter;
+}
+
+function hasResendConfiguration() {
+  return Boolean(process.env.RESEND_API_KEY?.trim());
+}
+
+function getResendFromAddress() {
+  return process.env.RESEND_FROM?.trim()
+    || 'Tiến Phát Website <onboarding@resend.dev>';
+}
+
+function getSmtpFromAddress() {
+  return process.env.EMAIL_FROM?.trim()
+    || `Tiến Phát Website <${process.env.SMTP_USER}>`;
 }
 
 async function resolveRecipient(preferredRecipient?: string) {
@@ -66,6 +96,137 @@ async function resolveRecipient(preferredRecipient?: string) {
     || process.env.SMTP_USER?.trim()
     || ''
   );
+}
+
+async function sendWithResend(message: EmailMessage): Promise<EmailResult> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+
+  if (!apiKey) {
+    return {
+      sent: false,
+      skipped: true,
+      recipient: message.to,
+      error: 'RESEND_API_KEY chưa được cấu hình',
+    };
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        ...(message.idempotencyKey
+          ? { 'Idempotency-Key': message.idempotencyKey }
+          : {}),
+      },
+      body: JSON.stringify({
+        from: getResendFromAddress(),
+        to: [message.to],
+        subject: message.subject,
+        html: message.html,
+        text: message.text,
+        ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      let errorBody: ResendErrorResponse = {};
+
+      try {
+        errorBody = await response.json() as ResendErrorResponse;
+      } catch {
+        // Giữ thông báo mặc định khi phía cung cấp không trả JSON.
+      }
+
+      const providerMessage = errorBody.message
+        || `Resend trả về HTTP ${response.status}`;
+
+      return {
+        sent: false,
+        skipped: false,
+        recipient: message.to,
+        error: providerMessage,
+      };
+    }
+
+    return {
+      sent: true,
+      skipped: false,
+      recipient: message.to,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : 'Không xác định';
+
+    return {
+      sent: false,
+      skipped: false,
+      recipient: message.to,
+      error: errorMessage === 'This operation was aborted'
+        ? 'Kết nối đến Resend API bị quá thời gian'
+        : errorMessage,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function sendWithSmtp(message: EmailMessage): Promise<EmailResult> {
+  const mailer = getTransporter();
+
+  if (!mailer) {
+    return {
+      sent: false,
+      skipped: true,
+      recipient: message.to,
+      error: 'SMTP chưa được cấu hình đầy đủ',
+    };
+  }
+
+  try {
+    await mailer.sendMail({
+      from: getSmtpFromAddress(),
+      to: message.to,
+      replyTo: message.replyTo,
+      subject: message.subject,
+      html: message.html,
+      text: message.text,
+    });
+
+    return {
+      sent: true,
+      skipped: false,
+      recipient: message.to,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : 'Không xác định';
+
+    console.error('Gửi email qua SMTP thất bại:', errorMessage);
+
+    return {
+      sent: false,
+      skipped: false,
+      recipient: message.to,
+      error: errorMessage,
+    };
+  }
+}
+
+async function sendEmail(message: EmailMessage): Promise<EmailResult> {
+  // Render Free chặn các cổng SMTP phổ biến. API HTTPS được ưu tiên khi có khóa Resend.
+  if (hasResendConfiguration()) {
+    return sendWithResend(message);
+  }
+
+  return sendWithSmtp(message);
 }
 
 function escapeHtml(value: string) {
@@ -169,77 +330,51 @@ function buildContactEmail(payload: ContactNotificationPayload) {
 }
 
 export async function sendContactNotification(payload: ContactNotificationPayload): Promise<EmailResult> {
-  const mailer = getTransporter();
   const recipient = await resolveRecipient();
 
-  if (!mailer || !recipient) {
+  if (!recipient) {
     return {
       sent: false,
       skipped: true,
-      recipient: recipient || undefined,
-      error: 'SMTP hoặc email nhận thông báo chưa được cấu hình',
+      error: 'Chưa có email nhận thông báo. Hãy nhập tại Admin > Cài đặt.',
     };
   }
 
   const { html, text, reference } = buildContactEmail(payload);
-  const from = process.env.EMAIL_FROM?.trim()
-    || `Tiến Phát Website <${process.env.SMTP_USER}>`;
 
-  try {
-    await mailer.sendMail({
-      from,
-      to: recipient,
-      replyTo: payload.email || undefined,
-      subject: `[Tiến Phát] Liên hệ mới ${reference} - ${payload.name}`,
-      html,
-      text,
-    });
-
-    return { sent: true, skipped: false, recipient };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Không xác định';
-    console.error('Gửi email liên hệ thất bại:', message);
-    return { sent: false, skipped: false, recipient, error: message };
-  }
+  return sendEmail({
+    to: recipient,
+    replyTo: payload.email,
+    subject: `[Tiến Phát] Liên hệ mới ${reference} - ${payload.name}`,
+    html,
+    text,
+    idempotencyKey: `contact-${payload.id}`,
+  });
 }
 
 export async function sendTestNotificationEmail(preferredRecipient?: string): Promise<EmailResult> {
-  const mailer = getTransporter();
   const recipient = await resolveRecipient(preferredRecipient);
 
-  if (!mailer || !recipient) {
+  if (!recipient) {
     return {
       sent: false,
       skipped: true,
-      recipient: recipient || undefined,
-      error: 'SMTP hoặc email nhận thông báo chưa được cấu hình',
+      error: 'Chưa có email nhận thông báo. Hãy nhập tại Admin > Cài đặt.',
     };
   }
 
-  const from = process.env.EMAIL_FROM?.trim()
-    || `Tiến Phát Website <${process.env.SMTP_USER}>`;
-
-  try {
-    await mailer.sendMail({
-      from,
-      to: recipient,
-      subject: '[Tiến Phát] Kiểm tra email thông báo',
-      text: 'Email thông báo từ website Tiến Phát đã được cấu hình thành công.',
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
-          <div style="background:#ea580c;color:#fff;padding:18px 22px;border-radius:12px 12px 0 0;">
-            <h2 style="margin:0;">Kiểm tra email thành công</h2>
-          </div>
-          <div style="border:1px solid #e2e8f0;border-top:0;padding:22px;border-radius:0 0 12px 12px;">
-            <p style="margin:0;color:#334155;line-height:1.6;">Website Tiến Phát có thể gửi thông báo liên hệ mới đến địa chỉ email này.</p>
-          </div>
-        </div>`,
-    });
-
-    return { sent: true, skipped: false, recipient };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Không xác định';
-    console.error('Gửi email kiểm tra thất bại:', message);
-    return { sent: false, skipped: false, recipient, error: message };
-  }
+  return sendEmail({
+    to: recipient,
+    subject: '[Tiến Phát] Kiểm tra email thông báo',
+    text: 'Email thông báo từ website Tiến Phát đã được cấu hình thành công.',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
+        <div style="background:#ea580c;color:#fff;padding:18px 22px;border-radius:12px 12px 0 0;">
+          <h2 style="margin:0;">Kiểm tra email thành công</h2>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-top:0;padding:22px;border-radius:0 0 12px 12px;">
+          <p style="margin:0;color:#334155;line-height:1.6;">Website Tiến Phát có thể gửi thông báo liên hệ mới đến địa chỉ email này.</p>
+        </div>
+      </div>`,
+  });
 }
