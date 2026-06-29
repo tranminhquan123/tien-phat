@@ -17,18 +17,20 @@ function toSlug(text: string): string {
 
 export async function getPublicProducts(params: {
   categorySlug?: string;
+  size?: string;
   search?: string;
   featured?: boolean;
   page?: number;
   limit?: number;
 }) {
-  const { categorySlug, search, featured, page = 1, limit = 12 } = params;
+  const { categorySlug, size, search, featured, page = 1, limit = 12 } = params;
   const skip = (page - 1) * limit;
 
   const where = {
     isActive: true,
     ...(featured && { isFeatured: true }),
     ...(categorySlug && { category: { slug: categorySlug } }),
+    ...(size && { size }),
     ...(search && {
       OR: [
         { name: { contains: search, mode: 'insensitive' as const } },
@@ -66,12 +68,22 @@ export async function getPublicProductBySlug(slug: string) {
 
   if (!product) return null;
 
-  // Sản phẩm liên quan cùng danh mục
   const related = await prisma.product.findMany({
-    where: { categoryId: product.categoryId, isActive: true, id: { not: product.id } },
-    include: { images: { where: { isPrimary: true } } },
+    where: {
+      categoryId: product.categoryId,
+      isActive: true,
+      id: { not: product.id },
+      ...(product.size && { size: product.size }),
+    },
+    include: {
+      category: { select: { id: true, name: true, slug: true } },
+      images: {
+        orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
+        take: 1,
+      },
+    },
     take: 4,
-    orderBy: { sortOrder: 'asc' },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
   });
 
   return { product, related };
@@ -82,14 +94,16 @@ export async function getPublicProductBySlug(slug: string) {
 export async function getAdminProducts(params: {
   search?: string;
   categoryId?: string;
+  size?: string;
   page?: number;
   limit?: number;
 }) {
-  const { search, categoryId, page = 1, limit = 20 } = params;
+  const { search, categoryId, size, page = 1, limit = 20 } = params;
   const skip = (page - 1) * limit;
 
   const where = {
     ...(categoryId && { categoryId }),
+    ...(size && { size }),
     ...(search && {
       OR: [
         { name: { contains: search, mode: 'insensitive' as const } },
@@ -102,8 +116,8 @@ export async function getAdminProducts(params: {
     prisma.product.findMany({
       where,
       include: {
-        category: { select: { id: true, name: true } },
-        images: { where: { isPrimary: true }, take: 1 },
+        category: { select: { id: true, name: true, slug: true } },
+        images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 1 },
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       skip,
@@ -122,6 +136,7 @@ export async function createProduct(data: {
   unit?: string;
   brand?: string;
   origin?: string;
+  size?: string;
   categoryId: string;
   isActive?: boolean;
   isFeatured?: boolean;
@@ -150,6 +165,7 @@ export async function updateProduct(
     unit: string;
     brand: string;
     origin: string;
+    size: string | null;
     categoryId: string;
     isActive: boolean;
     isFeatured: boolean;
