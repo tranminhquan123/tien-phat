@@ -6,17 +6,16 @@ import toast from 'react-hot-toast';
 import { ProductImageUrlInput } from '@/components/ProductImageUrlInput';
 import { getCategories } from '@/services/categoryService';
 import { adminCreateProduct } from '@/services/productService';
-import { getTileSizes } from '@/services/tileSizeService';
 import {
-  DEFAULT_TILE_SIZES,
-  type TileSizeOption,
-} from '@/constants/tileSizes';
+  getCategoryChildrenMap,
+  type CategoryChildOption,
+} from '@/services/categoryChildService';
 import type { Category } from '@/types';
 
 export function AdminProductCreatePage() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tileSizes, setTileSizes] = useState<TileSizeOption[]>(DEFAULT_TILE_SIZES);
+  const [childrenBySlug, setChildrenBySlug] = useState<Record<string, CategoryChildOption[]>>({});
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: '', description: '', price: '', unit: '', brand: '', origin: '', size: '',
@@ -24,11 +23,12 @@ export function AdminProductCreatePage() {
   });
 
   useEffect(() => {
-    Promise.all([getCategories(), getTileSizes()])
-      .then(([categoryResult, sizes]) => {
+    getCategories()
+      .then(async (categoryResult) => {
         const list = categoryResult.data ?? [];
+        const childMap = await getCategoryChildrenMap(list.map((category) => category.slug));
         setCategories(list);
-        setTileSizes(sizes);
+        setChildrenBySlug(childMap);
         setForm((current) => ({
           ...current,
           categoryId: current.categoryId || list[0]?.id || '',
@@ -38,7 +38,8 @@ export function AdminProductCreatePage() {
   }, []);
 
   const selectedCategory = categories.find((category) => category.id === form.categoryId);
-  const isTileCategory = selectedCategory?.slug === 'gach-op-lat';
+  const childOptions = selectedCategory ? childrenBySlug[selectedCategory.slug] ?? [] : [];
+  const childFieldLabel = selectedCategory?.slug === 'gach-op-lat' ? 'Kích thước' : 'Danh mục cấp 2';
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -48,8 +49,8 @@ export function AdminProductCreatePage() {
       return;
     }
 
-    if (isTileCategory && !form.size) {
-      toast.error('Hãy chọn kích thước gạch');
+    if (childOptions.length > 0 && !form.size) {
+      toast.error(`Hãy chọn ${childFieldLabel.toLowerCase()}`);
       return;
     }
 
@@ -78,7 +79,7 @@ export function AdminProductCreatePage() {
         unit: form.unit.trim() || undefined,
         brand: form.brand.trim() || undefined,
         origin: form.origin.trim() || undefined,
-        size: isTileCategory ? form.size : undefined,
+        size: childOptions.length > 0 ? form.size : undefined,
         categoryId: form.categoryId,
         sortOrder: Number(form.sortOrder) || 0,
         isActive: form.isActive,
@@ -109,7 +110,7 @@ export function AdminProductCreatePage() {
       <form onSubmit={handleSubmit} className="card space-y-5 p-6">
         <div>
           <Label required>Tên sản phẩm</Label>
-          <input className="field-input" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Gạch ốp lát 60x60" />
+          <input className="field-input" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Tên sản phẩm" />
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -121,10 +122,12 @@ export function AdminProductCreatePage() {
               onChange={(event) => {
                 const nextCategoryId = event.target.value;
                 const nextCategory = categories.find((category) => category.id === nextCategoryId);
+                const nextOptions = nextCategory ? childrenBySlug[nextCategory.slug] ?? [] : [];
+
                 setForm((current) => ({
                   ...current,
                   categoryId: nextCategoryId,
-                  size: nextCategory?.slug === 'gach-op-lat' ? current.size : '',
+                  size: nextOptions.some((option) => option.value === current.size) ? current.size : '',
                 }));
               }}
             >
@@ -133,15 +136,15 @@ export function AdminProductCreatePage() {
             </select>
           </div>
 
-          {isTileCategory && (
+          {childOptions.length > 0 && (
             <div>
-              <Label required>Kích thước</Label>
+              <Label required>{childFieldLabel}</Label>
               <select className="field-input" value={form.size} onChange={(event) => setForm((current) => ({ ...current, size: event.target.value }))}>
-                <option value="">-- Chọn kích thước --</option>
-                {tileSizes.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
+                <option value="">-- Chọn {childFieldLabel.toLowerCase()} --</option>
+                {childOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
               <Link to="/admin/danh-muc" className="mt-1 inline-block text-xs font-medium text-brand-600 hover:underline">
-                Quản lý kích thước trong danh mục Gạch Ốp Lát
+                Quản lý danh mục cấp 2
               </Link>
             </div>
           )}
