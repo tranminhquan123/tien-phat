@@ -11,6 +11,22 @@ export async function createContact(data: {
   return prisma.contactMessage.create({ data });
 }
 
+export async function appendContactSystemNote(id: string, systemNote: string) {
+  const contact = await prisma.contactMessage.findUnique({
+    where: { id },
+    select: { note: true },
+  });
+
+  const note = [contact?.note?.trim(), systemNote.trim()]
+    .filter(Boolean)
+    .join('\n\n');
+
+  return prisma.contactMessage.update({
+    where: { id },
+    data: { note },
+  });
+}
+
 export async function getContacts(params: {
   status?: ContactMessageStatus;
   page?: number;
