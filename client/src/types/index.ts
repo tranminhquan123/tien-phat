@@ -30,6 +30,17 @@ export interface Product {
   brand?: string;
   origin?: string;
   size?: string;
+  color?: string;
+  productType?: string;
+  surface?: string;
+  glaze?: string;
+  application?: string;
+  pattern?: string;
+  spaces?: string;
+  collection?: string;
+  faceCount?: number;
+  piecesPerBox?: number;
+  areaPerBox?: number;
   categoryId: string;
   category: Pick<Category, 'id' | 'name' | 'slug'>;
   images: ProductImage[];
