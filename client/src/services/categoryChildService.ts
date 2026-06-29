@@ -2,6 +2,7 @@ import { adminUpdateConfig, getSiteConfig } from './configService';
 import {
   DEFAULT_TILE_SIZES,
   TILE_SIZE_CONFIG_KEY,
+  getTileSizeLabel,
   normalizeTileSize,
   parseTileSizes,
   type TileSizeOption,
@@ -38,6 +39,17 @@ export function normalizeCategoryChild(
   if (!label || !value) return null;
 
   return { value, label };
+}
+
+export function formatCategoryChildValue(categorySlug: string | undefined, value?: string | null) {
+  if (!value) return '';
+  if (categorySlug === 'gach-op-lat') return getTileSizeLabel(value);
+
+  return value
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function parseGenericChildren(raw?: string | null): CategoryChildOption[] {
