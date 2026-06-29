@@ -6,22 +6,21 @@ import clsx from 'clsx';
 
 import { getProducts } from '@/services/productService';
 import { getCategories } from '@/services/categoryService';
-import { getTileSizes } from '@/services/tileSizeService';
+import {
+  getCategoryChildrenMap,
+  type CategoryChildOption,
+} from '@/services/categoryChildService';
 import { ProductCard } from '@/components/ProductCard';
 import { Pagination } from '@/components/Pagination';
 import { LoadingSpinner, EmptyState } from '@/components/LoadingSpinner';
-import {
-  DEFAULT_TILE_SIZES,
-  getTileSizeLabel,
-  type TileSizeOption,
-} from '@/constants/tileSizes';
+import { getTileSizeLabel } from '@/constants/tileSizes';
 import type { Product, Category } from '@/types';
 
 export function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tileSizes, setTileSizes] = useState<TileSizeOption[]>(DEFAULT_TILE_SIZES);
+  const [childrenBySlug, setChildrenBySlug] = useState<Record<string, CategoryChildOption[]>>({});
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -29,7 +28,7 @@ export function ProductsPage() {
   const [searchInput, setSearchInput] = useState(searchParams.get('search') ?? '');
 
   const categorySlug = searchParams.get('category') ?? '';
-  const size = searchParams.get('size') ?? '';
+  const childValue = searchParams.get('size') ?? '';
   const search = searchParams.get('search') ?? '';
   const page = parseInt(searchParams.get('page') ?? '1');
 
@@ -39,12 +38,8 @@ export function ProductsPage() {
     if (value) next.set(key, value);
     else next.delete(key);
 
-    if (key === 'category' && value !== 'gach-op-lat') {
+    if (key === 'category') {
       next.delete('size');
-    }
-
-    if (key === 'size' && value) {
-      next.set('category', 'gach-op-lat');
     }
 
     if (key !== 'page') next.delete('page');
@@ -55,24 +50,31 @@ export function ProductsPage() {
     setLoading(true);
     getProducts({
       category: categorySlug || undefined,
-      size: size || undefined,
+      size: childValue || undefined,
       search: search || undefined,
       page,
       limit: 12,
     })
-      .then((res) => {
-        setProducts(res.products ?? []);
-        setTotalPages(res.totalPages ?? 1);
-        setTotal(res.total ?? 0);
+      .then((response) => {
+        setProducts(response.products ?? []);
+        setTotalPages(response.totalPages ?? 1);
+        setTotal(response.total ?? 0);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [categorySlug, size, search, page]);
+  }, [categorySlug, childValue, search, page]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
+
   useEffect(() => {
-    getCategories(true).then((response) => setCategories(response.data ?? []));
-    getTileSizes().then(setTileSizes);
+    getCategories(true)
+      .then(async (response) => {
+        const list = response.data ?? [];
+        const childMap = await getCategoryChildrenMap(list.map((category) => category.slug));
+        setCategories(list);
+        setChildrenBySlug(childMap);
+      })
+      .catch(console.error);
   }, []);
 
   function handleSearchSubmit(event: React.FormEvent) {
@@ -81,9 +83,11 @@ export function ProductsPage() {
   }
 
   const activeCategory = categories.find((category) => category.slug === categorySlug);
-  const activeSizeLabel = getTileSizeLabel(size);
+  const activeChildren = childrenBySlug[categorySlug] ?? [];
+  const activeChild = activeChildren.find((item) => item.value === childValue);
+  const activeChildLabel = activeChild?.label ?? (categorySlug === 'gach-op-lat' ? getTileSizeLabel(childValue) : childValue);
   const pageTitle = activeCategory
-    ? `${activeCategory.name}${activeSizeLabel ? ` - ${activeSizeLabel}` : ''}`
+    ? `${activeCategory.name}${activeChildLabel ? ` - ${activeChildLabel}` : ''}`
     : 'Tất cả sản phẩm';
 
   return (
@@ -91,7 +95,7 @@ export function ProductsPage() {
       <div className="text-sm text-gray-400 mb-6">
         <span>Trang chủ</span> / <span>Sản phẩm</span>
         {activeCategory && <span> / <span className="text-gray-700">{activeCategory.name}</span></span>}
-        {activeSizeLabel && <span> / <span className="text-gray-700">{activeSizeLabel}</span></span>}
+        {activeChildLabel && <span> / <span className="text-gray-700">{activeChildLabel}</span></span>}
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -139,7 +143,7 @@ export function ProductsPage() {
             </button>
           )}
 
-          {(categorySlug || size || search) && (
+          {(categorySlug || childValue || search) && (
             <div className="p-3 bg-brand-50 rounded-xl">
               <p className="text-xs font-semibold text-brand-700 mb-2">Đang lọc:</p>
               <div className="flex flex-wrap gap-1">
@@ -151,12 +155,12 @@ export function ProductsPage() {
                     {activeCategory?.name} <X size={10} />
                   </button>
                 )}
-                {size && (
+                {childValue && (
                   <button
                     onClick={() => setParam('size', '')}
                     className="badge bg-brand-100 text-brand-700 gap-1"
                   >
-                    {activeSizeLabel} <X size={10} />
+                    {activeChildLabel} <X size={10} />
                   </button>
                 )}
                 {search && (
@@ -186,52 +190,56 @@ export function ProductsPage() {
                 </button>
               </li>
 
-              {categories.map((category) => (
-                <li key={category.id}>
-                  <button
-                    onClick={() => {
-                      setParam('category', category.slug);
-                      setFilterOpen(false);
-                    }}
-                    className={clsx(
-                      'w-full text-left px-2 py-1.5 rounded-lg text-sm transition-colors flex justify-between items-center',
-                      category.slug === categorySlug
-                        ? 'bg-brand-600 text-white font-medium'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    )}
-                  >
-                    <span>{category.name}</span>
-                    {category._count && (
-                      <span className={clsx('text-xs', category.slug === categorySlug ? 'text-white/70' : 'text-gray-400')}>
-                        {category._count.products}
-                      </span>
-                    )}
-                  </button>
+              {categories.map((category) => {
+                const categoryChildren = childrenBySlug[category.slug] ?? [];
 
-                  {category.slug === 'gach-op-lat' && categorySlug === 'gach-op-lat' && (
-                    <ul className="mt-1 ml-3 pl-3 border-l border-gray-200 space-y-0.5">
-                      {tileSizes.map((tileSize) => (
-                        <li key={tileSize.value}>
-                          <button
-                            onClick={() => {
-                              setParam('size', tileSize.value);
-                              setFilterOpen(false);
-                            }}
-                            className={clsx(
-                              'w-full text-left px-2 py-1.5 rounded-md text-xs transition-colors',
-                              size === tileSize.value
-                                ? 'bg-brand-50 text-brand-700 font-semibold'
-                                : 'text-gray-500 hover:bg-gray-50 hover:text-brand-600'
-                            )}
-                          >
-                            {tileSize.label}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
+                return (
+                  <li key={category.id}>
+                    <button
+                      onClick={() => {
+                        setParam('category', category.slug);
+                        setFilterOpen(false);
+                      }}
+                      className={clsx(
+                        'w-full text-left px-2 py-1.5 rounded-lg text-sm transition-colors flex justify-between items-center',
+                        category.slug === categorySlug
+                          ? 'bg-brand-600 text-white font-medium'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      )}
+                    >
+                      <span>{category.name}</span>
+                      {category._count && (
+                        <span className={clsx('text-xs', category.slug === categorySlug ? 'text-white/70' : 'text-gray-400')}>
+                          {category._count.products}
+                        </span>
+                      )}
+                    </button>
+
+                    {category.slug === categorySlug && categoryChildren.length > 0 && (
+                      <ul className="mt-1 ml-3 pl-3 border-l border-gray-200 space-y-0.5">
+                        {categoryChildren.map((child) => (
+                          <li key={child.value}>
+                            <button
+                              onClick={() => {
+                                setParam('size', child.value);
+                                setFilterOpen(false);
+                              }}
+                              className={clsx(
+                                'w-full text-left px-2 py-1.5 rounded-md text-xs transition-colors',
+                                childValue === child.value
+                                  ? 'bg-brand-50 text-brand-700 font-semibold'
+                                  : 'text-gray-500 hover:bg-gray-50 hover:text-brand-600'
+                              )}
+                            >
+                              {child.label}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </aside>
@@ -243,7 +251,7 @@ export function ProductsPage() {
             <EmptyState
               icon={Search}
               title="Không tìm thấy sản phẩm"
-              description="Chưa có sản phẩm thuộc kích thước này hoặc bộ lọc hiện tại không có kết quả"
+              description="Chưa có sản phẩm thuộc danh mục cấp 2 này hoặc bộ lọc hiện tại không có kết quả"
             />
           ) : (
             <>
