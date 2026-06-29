@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ChevronLeft, Phone, MapPin, Tag, Box, Globe, Ruler,
-  ZoomIn, Star,
+  ZoomIn, Star, Maximize2,
 } from 'lucide-react';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
@@ -11,6 +11,7 @@ import 'yet-another-react-lightbox/styles.css';
 import { getProductBySlug } from '@/services/productService';
 import { ProductCard } from '@/components/ProductCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { getTileSizeLabel } from '@/constants/tileSizes';
 import type { Product } from '@/types';
 
 export function ProductDetailPage() {
@@ -46,26 +47,28 @@ export function ProductDetailPage() {
   }
 
   const sortedImages = [...product.images].sort((a, b) => a.sortOrder - b.sortOrder);
+  const sizeLabel = getTileSizeLabel(product.size);
+  const categoryLink = product.size
+    ? `/san-pham?category=${product.category.slug}&size=${product.size}`
+    : `/san-pham?category=${product.category.slug}`;
 
   return (
     <div className="container mx-auto py-8">
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-400 mb-6">
         <Link to="/" className="hover:text-brand-600">Trang chủ</Link>
         <span>/</span>
         <Link to="/san-pham" className="hover:text-brand-600">Sản phẩm</Link>
         <span>/</span>
-        <Link to={`/san-pham?category=${product.category.slug}`} className="hover:text-brand-600">
+        <Link to={categoryLink} className="hover:text-brand-600">
           {product.category.name}
         </Link>
+        {sizeLabel && <><span>/</span><span className="text-gray-600">{sizeLabel}</span></>}
         <span>/</span>
         <span className="text-gray-700 font-medium truncate max-w-xs">{product.name}</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
-        {/* Images */}
         <div>
-          {/* Main image */}
           <div
             className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 cursor-zoom-in mb-3 group"
             onClick={() => setLightboxOpen(true)}
@@ -86,7 +89,6 @@ export function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Thumbnails */}
           {sortedImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
               {sortedImages.map((img, idx) => (
@@ -104,16 +106,14 @@ export function ProductDetailPage() {
           )}
         </div>
 
-        {/* Info */}
         <div className="flex flex-col">
           <p className="text-brand-600 text-sm font-medium flex items-center gap-1 mb-2">
-            <Tag size={13} /> {product.category.name}
+            <Tag size={13} /> {product.category.name}{sizeLabel ? ` · ${sizeLabel}` : ''}
           </p>
           <h1 className="text-2xl font-black text-gray-900 mb-4 leading-snug">
             {product.name}
           </h1>
 
-          {/* Price */}
           {product.price ? (
             <div className="bg-brand-50 rounded-xl p-4 mb-5">
               <p className="text-xs text-gray-500 mb-1">Giá tham khảo</p>
@@ -129,8 +129,16 @@ export function ProductDetailPage() {
             </div>
           )}
 
-          {/* Specs */}
           <div className="grid grid-cols-2 gap-3 mb-6">
+            {sizeLabel && (
+              <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
+                <Maximize2 size={15} className="text-brand-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-400">Kích thước</p>
+                  <p className="text-sm font-semibold">{sizeLabel}</p>
+                </div>
+              </div>
+            )}
             {product.brand && (
               <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
                 <Star size={15} className="text-brand-500 mt-0.5 shrink-0" />
@@ -160,7 +168,6 @@ export function ProductDetailPage() {
             )}
           </div>
 
-          {/* Description */}
           {product.description && (
             <div className="mb-6">
               <h3 className="font-bold text-gray-800 mb-2">Mô tả sản phẩm</h3>
@@ -170,7 +177,6 @@ export function ProductDetailPage() {
             </div>
           )}
 
-          {/* CTA */}
           <div className="flex flex-col gap-3 mt-auto">
             <a
               href="tel:0764432015"
@@ -185,19 +191,17 @@ export function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Related products */}
       {related.length > 0 && (
         <section>
           <h2 className="text-xl font-black text-gray-900 mb-5">Sản phẩm liên quan</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {related.map((relatedProduct) => (
+              <ProductCard key={relatedProduct.id} product={relatedProduct} />
             ))}
           </div>
         </section>
       )}
 
-      {/* Lightbox */}
       <Lightbox
         open={lightboxOpen}
         close={() => setLightboxOpen(false)}
@@ -206,9 +210,8 @@ export function ProductDetailPage() {
         on={{ view: ({ index }) => setActiveImg(index) }}
       />
 
-      {/* Back */}
       <Link
-        to="/san-pham"
+        to={categoryLink}
         className="mt-10 inline-flex items-center gap-2 text-sm text-gray-400 hover:text-brand-600 transition-colors"
       >
         <ChevronLeft size={16} /> Quay lại danh sách
