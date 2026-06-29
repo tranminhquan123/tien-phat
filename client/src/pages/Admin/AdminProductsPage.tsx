@@ -6,14 +6,13 @@ import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import { adminGetProducts, adminUpdateProduct, adminDeleteProduct } from '@/services/productService';
 import { getCategories } from '@/services/categoryService';
-import { getTileSizes } from '@/services/tileSizeService';
+import {
+  getCategoryChildrenMap,
+  type CategoryChildOption,
+} from '@/services/categoryChildService';
+import { getTileSizeLabel } from '@/constants/tileSizes';
 import { LoadingSpinner, EmptyState } from '@/components/LoadingSpinner';
 import { Pagination } from '@/components/Pagination';
-import {
-  DEFAULT_TILE_SIZES,
-  getTileSizeLabel,
-  type TileSizeOption,
-} from '@/constants/tileSizes';
 import type { Product, Category } from '@/types';
 
 type FormData = {
@@ -48,7 +47,7 @@ export function AdminProductsPage() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tileSizes, setTileSizes] = useState<TileSizeOption[]>(DEFAULT_TILE_SIZES);
+  const [childrenBySlug, setChildrenBySlug] = useState<Record<string, CategoryChildOption[]>>({});
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
@@ -64,12 +63,13 @@ export function AdminProductsPage() {
 
   const selectedFilterCategory = categories.find((category) => category.id === filterCatId);
   const selectedFormCategory = categories.find((category) => category.id === form.categoryId);
-  const isTileFilter = selectedFilterCategory?.slug === 'gach-op-lat';
-  const isTileForm = selectedFormCategory?.slug === 'gach-op-lat';
-
-  const formTileSizes = form.size && !tileSizes.some((size) => size.value === form.size)
-    ? [{ value: form.size, label: getTileSizeLabel(form.size) }, ...tileSizes]
-    : tileSizes;
+  const filterOptions = selectedFilterCategory ? childrenBySlug[selectedFilterCategory.slug] ?? [] : [];
+  const baseFormOptions = selectedFormCategory ? childrenBySlug[selectedFormCategory.slug] ?? [] : [];
+  const formOptions = form.size && !baseFormOptions.some((option) => option.value === form.size)
+    ? [{ value: form.size, label: formatChildLabel(selectedFormCategory?.slug, form.size) }, ...baseFormOptions]
+    : baseFormOptions;
+  const formChildLabel = selectedFormCategory?.slug === 'gach-op-lat' ? 'Kích thước' : 'Danh mục cấp 2';
+  const filterChildLabel = selectedFilterCategory?.slug === 'gach-op-lat' ? 'kích thước' : 'danh mục cấp 2';
 
   const fetchProducts = useCallback(() => {
     setLoading(true);
@@ -89,11 +89,14 @@ export function AdminProductsPage() {
   }, [search, filterCatId, filterSize, page]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
+
   useEffect(() => {
-    Promise.all([getCategories(), getTileSizes()])
-      .then(([categoryResult, sizes]) => {
-        setCategories(categoryResult.data ?? []);
-        setTileSizes(sizes);
+    getCategories()
+      .then(async (categoryResult) => {
+        const list = categoryResult.data ?? [];
+        const childMap = await getCategoryChildrenMap(list.map((category) => category.slug));
+        setCategories(list);
+        setChildrenBySlug(childMap);
       })
       .catch((error) => toast.error((error as Error).message));
   }, []);
@@ -122,8 +125,8 @@ export function AdminProductsPage() {
       return;
     }
 
-    if (isTileForm && !form.size) {
-      toast.error('Hãy chọn kích thước gạch');
+    if (baseFormOptions.length > 0 && !form.size) {
+      toast.error(`Hãy chọn ${formChildLabel.toLowerCase()}`);
       return;
     }
 
@@ -136,7 +139,7 @@ export function AdminProductsPage() {
         unit: form.unit || undefined,
         brand: form.brand || undefined,
         origin: form.origin || undefined,
-        size: isTileForm ? form.size : null,
+        size: baseFormOptions.length > 0 ? form.size : null,
         categoryId: form.categoryId,
         isActive: form.isActive,
         isFeatured: form.isFeatured,
@@ -173,6 +176,12 @@ export function AdminProductsPage() {
     }
   }
 
+  function productChildLabel(product: Product) {
+    if (!product.size) return '—';
+    const option = (childrenBySlug[product.category.slug] ?? []).find((item) => item.value === product.size);
+    return option?.label ?? formatChildLabel(product.category.slug, product.size);
+  }
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -200,10 +209,8 @@ export function AdminProductsPage() {
         <select
           value={filterCatId}
           onChange={(event) => {
-            const categoryId = event.target.value;
-            const category = categories.find((item) => item.id === categoryId);
-            setFilterCatId(categoryId);
-            if (category?.slug !== 'gach-op-lat') setFilterSize('');
+            setFilterCatId(event.target.value);
+            setFilterSize('');
             setPage(1);
           }}
           className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none"
@@ -212,14 +219,14 @@ export function AdminProductsPage() {
           {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
         </select>
 
-        {isTileFilter && (
+        {filterOptions.length > 0 && (
           <select
             value={filterSize}
             onChange={(event) => { setFilterSize(event.target.value); setPage(1); }}
             className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none"
           >
-            <option value="">Tất cả kích thước</option>
-            {tileSizes.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
+            <option value="">Tất cả {filterChildLabel}</option>
+            {filterOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
         )}
       </div>
@@ -234,7 +241,7 @@ export function AdminProductsPage() {
             <table className="w-full text-sm">
               <thead className="border-b border-gray-100 bg-gray-50">
                 <tr>
-                  {['Sản phẩm', 'Danh mục', 'Kích thước', 'Giá', 'Nổi bật', 'Trạng thái', 'Thao tác'].map((heading) => (
+                  {['Sản phẩm', 'Danh mục', 'Phân loại', 'Giá', 'Nổi bật', 'Trạng thái', 'Thao tác'].map((heading) => (
                     <th key={heading} className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                       {heading}
                     </th>
@@ -258,7 +265,7 @@ export function AdminProductsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3"><span className="badge bg-gray-100 text-gray-600">{product.category.name}</span></td>
-                      <td className="px-4 py-3 whitespace-nowrap text-gray-600">{getTileSizeLabel(product.size) || '—'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-gray-600">{productChildLabel(product)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-gray-700">
                         {product.price ? `${new Intl.NumberFormat('vi-VN').format(product.price)}đ` : <span className="text-xs italic text-gray-400">Liên hệ</span>}
                       </td>
@@ -270,12 +277,8 @@ export function AdminProductsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
-                          <button onClick={() => openEdit(product)} className="rounded-lg p-1.5 text-gray-400 hover:bg-brand-50 hover:text-brand-600" title="Sửa sản phẩm">
-                            <Pencil size={15} />
-                          </button>
-                          <button onClick={() => setDeleteId(product.id)} className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500" title="Xóa sản phẩm">
-                            <Trash2 size={15} />
-                          </button>
+                          <button onClick={() => openEdit(product)} className="rounded-lg p-1.5 text-gray-400 hover:bg-brand-50 hover:text-brand-600" title="Sửa sản phẩm"><Pencil size={15} /></button>
+                          <button onClick={() => setDeleteId(product.id)} className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500" title="Xóa sản phẩm"><Trash2 size={15} /></button>
                         </div>
                       </td>
                     </tr>
@@ -304,10 +307,11 @@ export function AdminProductsPage() {
                 onChange={(event) => {
                   const categoryId = event.target.value;
                   const category = categories.find((item) => item.id === categoryId);
+                  const options = category ? childrenBySlug[category.slug] ?? [] : [];
                   setForm((current) => ({
                     ...current,
                     categoryId,
-                    size: category?.slug === 'gach-op-lat' ? current.size : '',
+                    size: options.some((option) => option.value === current.size) ? current.size : '',
                   }));
                 }}
               >
@@ -315,15 +319,17 @@ export function AdminProductsPage() {
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
               </select>
             </div>
-            {isTileForm && (
+
+            {formOptions.length > 0 && (
               <div>
-                <FieldLabel required>Kích thước</FieldLabel>
+                <FieldLabel required>{formChildLabel}</FieldLabel>
                 <select className="field-input" value={form.size} onChange={(event) => setForm((current) => ({ ...current, size: event.target.value }))}>
-                  <option value="">-- Chọn kích thước --</option>
-                  {formTileSizes.map((size) => <option key={size.value} value={size.value}>{size.label}</option>)}
+                  <option value="">-- Chọn {formChildLabel.toLowerCase()} --</option>
+                  {formOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </div>
             )}
+
             <div><FieldLabel>Thương hiệu</FieldLabel><input className="field-input" value={form.brand} onChange={(event) => setForm((current) => ({ ...current, brand: event.target.value }))} /></div>
             <div><FieldLabel>Giá (VNĐ)</FieldLabel><input type="number" className="field-input" value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} /></div>
             <div><FieldLabel>Đơn vị</FieldLabel><input className="field-input" value={form.unit} onChange={(event) => setForm((current) => ({ ...current, unit: event.target.value }))} /></div>
@@ -353,6 +359,15 @@ export function AdminProductsPage() {
       )}
     </div>
   );
+}
+
+function formatChildLabel(categorySlug: string | undefined, value: string) {
+  if (categorySlug === 'gach-op-lat') return getTileSizeLabel(value);
+  return value
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
