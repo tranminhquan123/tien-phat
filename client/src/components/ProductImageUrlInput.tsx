@@ -10,7 +10,8 @@ type Props = {
 
 const MAX_IMAGES = 12;
 const MAX_SIZE = 12 * 1024 * 1024;
-const MAX_DIMENSION = 1600;
+const MAX_DIMENSION = 1200;
+const WEBP_QUALITY = 0.72;
 
 async function optimizeImage(file: File): Promise<string> {
   const bitmap = await createImageBitmap(file);
@@ -29,7 +30,7 @@ async function optimizeImage(file: File): Promise<string> {
 
   context.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
-  return canvas.toDataURL('image/webp', 0.8);
+  return canvas.toDataURL('image/webp', WEBP_QUALITY);
 }
 
 export function ProductImageUrlInput({ value, onChange }: Props) {
@@ -88,7 +89,7 @@ export function ProductImageUrlInput({ value, onChange }: Props) {
         Hình ảnh sản phẩm
       </div>
       <p className="mb-3 text-xs text-gray-500">
-        Chọn tối đa {MAX_IMAGES} ảnh JPG, PNG hoặc WEBP. Ảnh đầu tiên là ảnh đại diện.
+        Chọn tối đa {MAX_IMAGES} ảnh JPG, PNG hoặc WEBP. Ảnh được tự động chuyển sang WEBP tối đa 1200 px; ảnh đầu tiên là ảnh đại diện.
       </p>
 
       <input
@@ -117,7 +118,7 @@ export function ProductImageUrlInput({ value, onChange }: Props) {
         <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
           {images.map((image, index) => (
             <div key={index} className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <img src={image} alt={`Ảnh ${index + 1}`} className="h-full w-full object-cover" />
+              <img src={image} alt={`Ảnh ${index + 1}`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               {index === 0 && <span className="absolute left-1 top-1 rounded bg-brand-600 px-1.5 py-0.5 text-[10px] text-white">Ảnh chính</span>}
               <button
                 type="button"
