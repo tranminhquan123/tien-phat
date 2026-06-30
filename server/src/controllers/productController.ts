@@ -11,6 +11,12 @@ import {
   deleteProductImage,
 } from '@/services/productService';
 
+function parsePositiveInteger(value: string | undefined, fallback: number, maximum: number) {
+  const parsed = Number.parseInt(value || '', 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.min(parsed, maximum);
+}
+
 // PUBLIC
 export async function listPublicProducts(req: Request, res: Response) {
   try {
@@ -20,9 +26,10 @@ export async function listPublicProducts(req: Request, res: Response) {
       size,
       search,
       featured: featured === 'true',
-      page: page ? parseInt(page) : 1,
-      limit: limit ? parseInt(limit) : 12,
+      page: parsePositiveInteger(page, 1, 10_000),
+      limit: parsePositiveInteger(limit, 12, 48),
     });
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(500).json({ success: false, message: (err as Error).message });
@@ -35,6 +42,7 @@ export async function getProductDetail(req: Request, res: Response) {
     if (!result) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
     }
+    res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=600');
     return res.json({ success: true, data: result });
   } catch (err) {
     return res.status(500).json({ success: false, message: (err as Error).message });
@@ -49,9 +57,10 @@ export async function adminListProducts(req: Request, res: Response) {
       search,
       categoryId,
       size,
-      page: page ? parseInt(page) : 1,
-      limit: limit ? parseInt(limit) : 20,
+      page: parsePositiveInteger(page, 1, 10_000),
+      limit: parsePositiveInteger(limit, 20, 100),
     });
+    res.setHeader('Cache-Control', 'no-store');
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(500).json({ success: false, message: (err as Error).message });
