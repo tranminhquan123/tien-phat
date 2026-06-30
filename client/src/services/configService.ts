@@ -3,13 +3,12 @@ import { api } from './api';
 import type { SiteConfig, Banner } from '@/types';
 
 export function getSiteConfig() {
-  return api.get<{ success: boolean; data: SiteConfig }>('/config');
+  return api.getCached<{ success: boolean; data: SiteConfig }>('/config', 5 * 60_000);
 }
 
 export function getBanners(activeOnly = false) {
-  return api.get<{ success: boolean; data: Banner[] }>(
-    `/config/banners${activeOnly ? '?activeOnly=true' : ''}`
-  );
+  const path = `/config/banners${activeOnly ? '?activeOnly=true' : ''}`;
+  return api.getCached<{ success: boolean; data: Banner[] }>(path, 5 * 60_000);
 }
 
 export function adminUpdateConfig(data: Partial<SiteConfig>) {
