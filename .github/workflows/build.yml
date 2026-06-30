@@ -31,7 +31,7 @@ jobs:
         run: npm run build
 
   server:
-    name: Build server
+    name: Test and build server
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -55,6 +55,9 @@ jobs:
 
       - name: Generate Prisma client
         run: npm run db:generate
+
+      - name: Test advisory engine
+        run: npm test
 
       - name: Build
         run: npm run build
