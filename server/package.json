@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "test": "tsx --test src/utils/advisoryParser.test.ts src/utils/advisoryScoring.test.ts src/utils/adminAiRules.test.ts",
+    "test:smoke": "node scripts/run-smoke.js",
     "build": "tsc && tsc-alias",
     "start": "node scripts/start.js",
     "db:migrate": "prisma migrate dev",
