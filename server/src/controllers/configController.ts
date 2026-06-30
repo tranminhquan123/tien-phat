@@ -5,6 +5,7 @@ import { getAllConfigs, updateConfigs, getBanners, upsertBanner, deleteBanner } 
 export async function getPublicConfig(_req: Request, res: Response) {
   try {
     const config = await getAllConfigs();
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=900');
     res.json({ success: true, data: config });
   } catch (err) {
     res.status(500).json({ success: false, message: (err as Error).message });
@@ -14,6 +15,7 @@ export async function getPublicConfig(_req: Request, res: Response) {
 export async function adminUpdateConfig(req: Request, res: Response) {
   try {
     const config = await updateConfigs(req.body as Record<string, string>);
+    res.setHeader('Cache-Control', 'no-store');
     res.json({ success: true, data: config });
   } catch (err) {
     res.status(500).json({ success: false, message: (err as Error).message });
@@ -24,6 +26,7 @@ export async function listBanners(req: Request, res: Response) {
   try {
     const activeOnly = req.query['activeOnly'] === 'true';
     const banners = await getBanners(activeOnly);
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=900');
     res.json({ success: true, data: banners });
   } catch (err) {
     res.status(500).json({ success: false, message: (err as Error).message });
