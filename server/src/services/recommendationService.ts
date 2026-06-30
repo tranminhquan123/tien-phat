@@ -133,15 +133,19 @@ function formatSize(size?: string) {
   return size ? size.replace('x', ' x ') : '';
 }
 
+function buildSizeQuickReplies(sizes: string[]) {
+  return sizes
+    .slice(0, 6)
+    .map((size) => `Kích thước ${formatSize(size)}`);
+}
+
 function buildQuickReplies(analysis: AdvisoryAnalysis, sizes: string[]) {
   if (!analysis.intent) {
     return ['Gạch lát nền', 'Gạch ốp tường', 'Gạch lát sân', 'Thiết bị vệ sinh'];
   }
 
   if (analysis.categorySlug === 'gach-op-lat' && !analysis.size) {
-    return sizes
-      .slice(0, 6)
-      .map((size) => `Kích thước ${formatSize(size)}`);
+    return buildSizeQuickReplies(sizes);
   }
 
   if (!analysis.space && analysis.categorySlug === 'gach-op-lat') {
@@ -242,6 +246,16 @@ export async function recommendProducts(
   const catalog = await getCatalog();
   const current = analyzeAdvisoryMessage(message, catalog.sizes, catalog.brands);
   const analysis = mergeAdvisoryAnalysis(previousAnalysis, current);
+  const wantsSizeSelection = current.normalizedText.includes('tim theo kich thuoc');
+
+  if (wantsSizeSelection && !current.size) {
+    return {
+      analysis,
+      recommendations: [],
+      reply: 'Anh/chị muốn tìm sản phẩm theo kích thước nào?',
+      quickReplies: buildSizeQuickReplies(catalog.sizes),
+    };
+  }
 
   const hasEnoughInformation = Boolean(
     analysis.intent || analysis.size || analysis.brand || analysis.color || analysis.space
