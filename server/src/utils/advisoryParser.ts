@@ -20,14 +20,14 @@ export type AdvisoryAnalysis = {
   color?: string;
 };
 
-type IntentDefinition = {
+export type IntentDefinition = {
   value: AdvisoryIntent;
   label: string;
   categorySlug: string;
   keywords: string[];
 };
 
-type SpaceDefinition = {
+export type SpaceDefinition = {
   value: string;
   label: string;
   keywords: string[];
@@ -39,7 +39,7 @@ const INTENTS: IntentDefinition[] = [
     label: 'lát sân hoặc khu vực ngoài trời',
     categorySlug: 'gach-op-lat',
     keywords: [
-      'lat san', 'san truoc', 'san sau', 'san thuong', 'ban cong',
+      'san truoc', 'san sau', 'san thuong', 'ban cong',
       'ngoai troi', 'loi di', 'chong tron', 'chong truot',
     ],
   },
@@ -196,6 +196,10 @@ export function getSpaceDetails(space?: string | null) {
 }
 
 export function detectIntent(message: string) {
+  const original = message.toLowerCase().normalize('NFC');
+  if (original.includes('lát sân')) return getIntentDetails('LAT_NGOAI_TROI');
+  if (original.includes('lát sàn')) return getIntentDetails('LAT_NEN');
+
   const normalized = normalizeVietnamese(message);
   return findDefinition(normalized, INTENTS);
 }
