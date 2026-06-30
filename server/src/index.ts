@@ -9,12 +9,15 @@ import productRoutes from '@/routes/productRoutes';
 import categoryRoutes from '@/routes/categoryRoutes';
 import contactRoutes from '@/routes/contactRoutes';
 import configRoutes from '@/routes/configRoutes';
+import chatRoutes from '@/routes/chatRoutes';
+import homeRoutes from '@/routes/homeRoutes';
 import { errorHandler } from '@/middlewares/errorHandler';
 
 const app = express();
 
 // Render chuyển tiếp địa chỉ IP thật qua reverse proxy.
 app.set('trust proxy', 1);
+app.disable('x-powered-by');
 
 // Middlewares
 app.use(cors({
@@ -27,7 +30,10 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Phục vụ file upload
-app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads'), {
+  maxAge: '7d',
+  immutable: true,
+}));
 
 // Trang gốc để kiểm tra backend đang hoạt động
 app.get('/', (_req, res) => {
@@ -40,14 +46,17 @@ app.get('/', (_req, res) => {
 });
 
 // Routes
+app.use('/api/home', homeRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
