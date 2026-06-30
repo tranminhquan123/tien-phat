@@ -37,3 +37,15 @@ test('scores a detailed request as high potential', () => {
   const score = calculateLeadScore(requirements, { phone: 'available' });
   assert.equal(getLeadLevel(score), 'HIGH');
 });
+
+test('distinguishes lát sàn from lát sân', () => {
+  const floor = extractRequirementsByRules([
+    { sender: 'CUSTOMER', content: 'Tôi cần gạch lát sàn nhà.' },
+  ]);
+  const yard = extractRequirementsByRules([
+    { sender: 'CUSTOMER', content: 'Tôi cần gạch lát sân trước.' },
+  ]);
+
+  assert.equal(floor.intent, 'LAT_NEN');
+  assert.equal(yard.intent, 'LAT_NGOAI_TROI');
+});
