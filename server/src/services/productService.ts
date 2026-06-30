@@ -1,5 +1,6 @@
 // src/services/productService.ts
 import { prisma } from '@/lib/prisma';
+import { clearRecommendationCatalogCache } from '@/services/recommendationService';
 
 function toSlug(text: string): string {
   return text
@@ -36,6 +37,10 @@ export async function getPublicProducts(params: {
         { name: { contains: search, mode: 'insensitive' as const } },
         { brand: { contains: search, mode: 'insensitive' as const } },
         { description: { contains: search, mode: 'insensitive' as const } },
+        { application: { contains: search, mode: 'insensitive' as const } },
+        { spaces: { contains: search, mode: 'insensitive' as const } },
+        { productType: { contains: search, mode: 'insensitive' as const } },
+        { color: { contains: search, mode: 'insensitive' as const } },
       ],
     }),
   };
@@ -45,11 +50,16 @@ export async function getPublicProducts(params: {
       where,
       include: {
         category: { select: { id: true, name: true, slug: true } },
-        images: { orderBy: { sortOrder: 'asc' } },
+        // Trang danh sách chỉ hiển thị một ảnh. Trả toàn bộ 12 ảnh khiến JSON rất lớn,
+        // đặc biệt khi ảnh được lưu dưới dạng data URL.
+        images: {
+          orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
+          take: 1,
+        },
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       skip,
-      take: limit,
+      take: Math.min(limit, 48),
     }),
     prisma.product.count({ where }),
   ]);
@@ -62,7 +72,7 @@ export async function getPublicProductBySlug(slug: string) {
     where: { slug, isActive: true },
     include: {
       category: { select: { id: true, name: true, slug: true } },
-      images: { orderBy: { sortOrder: 'asc' } },
+      images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
     },
   });
 
@@ -157,7 +167,7 @@ export async function createProduct(data: {
   const { images, ...productData } = data;
   const slug = toSlug(data.name);
 
-  return prisma.product.create({
+  const product = await prisma.product.create({
     data: {
       ...productData,
       slug,
@@ -165,6 +175,9 @@ export async function createProduct(data: {
     },
     include: { category: true, images: true },
   });
+
+  clearRecommendationCatalogCache();
+  return product;
 }
 
 export async function updateProduct(
@@ -195,19 +208,21 @@ export async function updateProduct(
   }>
 ) {
   const updateData: Record<string, unknown> = { ...data };
-  if (data.name) {
-    updateData.slug = toSlug(data.name);
-  }
+  if (data.name) updateData.slug = toSlug(data.name);
 
-  return prisma.product.update({
+  const product = await prisma.product.update({
     where: { id },
     data: updateData,
     include: { category: true, images: true },
   });
+
+  clearRecommendationCatalogCache();
+  return product;
 }
 
 export async function deleteProduct(id: string) {
   await prisma.product.delete({ where: { id } });
+  clearRecommendationCatalogCache();
 }
 
 export async function addProductImage(
@@ -220,9 +235,13 @@ export async function addProductImage(
       data: { isPrimary: false },
     });
   }
-  return prisma.productImage.create({ data: { ...imageData, productId } });
+
+  const image = await prisma.productImage.create({ data: { ...imageData, productId } });
+  clearRecommendationCatalogCache();
+  return image;
 }
 
 export async function deleteProductImage(imageId: string) {
   await prisma.productImage.delete({ where: { id: imageId } });
+  clearRecommendationCatalogCache();
 }
