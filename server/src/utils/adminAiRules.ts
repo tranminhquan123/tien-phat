@@ -155,8 +155,12 @@ function detectCompactSize(normalized: string) {
   return null;
 }
 
-function detectIntent(normalized: string) {
-  if (normalized.includes('lat san') || normalized.includes('ngoai troi') || normalized.includes('ban cong') || normalized.includes('san thuong')) return 'LAT_NGOAI_TROI';
+function detectIntent(originalText: string, normalized: string) {
+  const original = originalText.toLowerCase().normalize('NFC');
+  if (original.includes('lát sân')) return 'LAT_NGOAI_TROI';
+  if (original.includes('lát sàn')) return 'LAT_NEN';
+
+  if (normalized.includes('ngoai troi') || normalized.includes('ban cong') || normalized.includes('san thuong') || normalized.includes('san truoc') || normalized.includes('san sau')) return 'LAT_NGOAI_TROI';
   if (normalized.includes('op tuong') || normalized.includes('gach tuong') || normalized.includes('op bep')) return 'OP_TUONG';
   if (normalized.includes('lat nen') || normalized.includes('san nha') || normalized.includes('gach lat')) return 'LAT_NEN';
   if (normalized.includes('thiet bi ve sinh') || normalized.includes('bon cau') || normalized.includes('lavabo') || normalized.includes('voi sen')) return 'THIET_BI_VE_SINH';
@@ -194,7 +198,7 @@ export function extractRequirementsByRules(
 ): ExtractedRequirements {
   const text = customerText(messages);
   const normalized = normalizeVietnamese(text);
-  const intent = hints.intent || detectIntent(normalized);
+  const intent = hints.intent || detectIntent(text, normalized);
   const wantsQuote = [
     'bao gia', 'xin gia', 'gui gia', 'don gia', 'gia bao nhieu', 'can gia',
   ].some((keyword) => normalized.includes(keyword));
