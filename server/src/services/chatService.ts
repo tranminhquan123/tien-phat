@@ -134,6 +134,7 @@ export async function createChatSession(sourcePage?: string) {
           sender: 'ASSISTANT',
           content: GREETING,
           metadata: toJson({ quickReplies: INITIAL_QUICK_REPLIES }),
+          isRead: true,
         },
       },
     },
@@ -151,6 +152,13 @@ export async function createChatSession(sourcePage?: string) {
 
 export async function getChatSession(sessionId: string, accessToken: string) {
   const session = await requireSession(sessionId, accessToken);
+
+  // Mỗi lần widget đồng bộ, các tin của nhân viên đã được khách nhận.
+  await prisma.chatMessage.updateMany({
+    where: { sessionId, sender: 'ADMIN', isRead: false },
+    data: { isRead: true },
+  });
+
   const newestMessages = await prisma.chatMessage.findMany({
     where: { sessionId },
     orderBy: { createdAt: 'desc' },
@@ -176,7 +184,7 @@ export async function sendChatMessage(
 
   const messageCount = await prisma.chatMessage.count({ where: { sessionId } });
   if (messageCount >= MAX_MESSAGES_PER_SESSION) {
-    throw new ChatAccessError('Cuộc trò chuyện đã đạt giới hạn. Vui lòng chuyển sang nhân viên tư vấn.', 409);
+    throw new ChatAccessError('Cuộc trò chuyện đã đạt giới hạn. Vui lòng tạo cuộc trò chuyện mới.', 409);
   }
 
   const customerMessage = await prisma.chatMessage.create({
@@ -184,17 +192,18 @@ export async function sendChatMessage(
       sessionId,
       sender: 'CUSTOMER',
       content,
+      isRead: false,
     },
   });
 
   if (session.status === 'WAITING_ADMIN' || session.status === 'ADMIN_ACTIVE') {
-    await prisma.chatSession.update({
+    const updatedSession = await prisma.chatSession.update({
       where: { id: sessionId },
       data: { lastMessageAt: new Date() },
     });
 
     return {
-      session: publicSession({ ...session, lastMessageAt: new Date() }),
+      session: publicSession(updatedSession),
       customerMessage,
       assistantMessage: null,
     };
@@ -229,6 +238,7 @@ export async function sendChatMessage(
           quickReplies: result.quickReplies,
           detected: result.analysis,
         }),
+        isRead: true,
       },
     }),
   ]);
@@ -298,7 +308,7 @@ export async function requestHumanHandoff(
     message: summary,
   });
 
-  const handoffReply = 'Tiến Phát đã tiếp nhận yêu cầu. Nhân viên sẽ liên hệ với anh/chị sớm nhất trong giờ làm việc.';
+  const handoffReply = 'Tiến Phát đã tiếp nhận yêu cầu. Anh/chị có thể tiếp tục nhắn tại đây; nhân viên sẽ phản hồi sớm nhất trong giờ làm việc.';
   const now = new Date();
   const [updatedSession, assistantMessage] = await prisma.$transaction([
     prisma.chatSession.update({
@@ -318,6 +328,7 @@ export async function requestHumanHandoff(
         sender: 'ASSISTANT',
         content: handoffReply,
         metadata: toJson({ handoff: true, contactId: contact.id }),
+        isRead: true,
       },
     }),
   ]);
