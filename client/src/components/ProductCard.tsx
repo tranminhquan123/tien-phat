@@ -27,6 +27,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
           <img
             src={primaryImage.url}
             alt={primaryImage.altText ?? product.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
@@ -59,9 +61,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           {product.name}
         </h3>
 
-        {meta.length > 0 && (
-          <p className="text-xs text-gray-400">{meta.join(' · ')}</p>
-        )}
+        {meta.length > 0 && <p className="text-xs text-gray-400">{meta.join(' · ')}</p>}
 
         {product.price ? (
           <p className="mt-auto pt-2 text-brand-600 font-bold text-sm">
@@ -69,14 +69,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
               style: 'currency',
               currency: 'VND',
             }).format(product.price)}
-            {product.unit && (
-              <span className="text-gray-400 font-normal text-xs">/{product.unit}</span>
-            )}
+            {product.unit && <span className="text-gray-400 font-normal text-xs">/{product.unit}</span>}
           </p>
         ) : (
-          <p className="mt-auto pt-2 text-gray-400 text-xs italic">
-            Liên hệ để báo giá
-          </p>
+          <p className="mt-auto pt-2 text-gray-400 text-xs italic">Liên hệ để báo giá</p>
         )}
       </div>
     </Link>
