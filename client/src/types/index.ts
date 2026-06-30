@@ -69,6 +69,7 @@ export interface ContactMessage {
   status: 'NEW' | 'READING' | 'REPLIED' | 'CLOSED';
   note?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export type ChatSessionStatus = 'AI_ACTIVE' | 'WAITING_ADMIN' | 'ADMIN_ACTIVE' | 'CLOSED';
@@ -110,6 +111,12 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+export interface ChatAdminSummary {
+  id: string;
+  name: string;
+  username: string;
+}
+
 export interface ChatSession {
   id: string;
   status: ChatSessionStatus;
@@ -123,9 +130,34 @@ export interface ChatSession {
   detectedBrand: string | null;
   detectedColor: string | null;
   sourcePage: string | null;
+  handoffContactId?: string | null;
+  assignedAdminId?: string | null;
+  assignedAdmin?: ChatAdminSummary | null;
+  acceptedAt?: string | null;
+  closedAt?: string | null;
   lastMessageAt: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminChatSessionListItem extends ChatSession {
+  unreadCount: number;
+  lastMessage: Pick<ChatMessage, 'id' | 'sender' | 'content' | 'createdAt' | 'isRead'> | null;
+  contact: Pick<ContactMessage, 'id' | 'name' | 'phone' | 'email' | 'status' | 'note' | 'createdAt' | 'updatedAt'> | null;
+}
+
+export interface AdminChatSessionDetail {
+  session: ChatSession & { messages: ChatMessage[] };
+  contact: ContactMessage | null;
+}
+
+export interface AdminChatStats {
+  total: number;
+  aiActive: number;
+  waiting: number;
+  active: number;
+  closed: number;
+  unreadMessages: number;
 }
 
 export interface SiteConfig {

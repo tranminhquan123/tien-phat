@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   Bot,
   ExternalLink,
+  Headphones,
   Loader2,
-  MessageCircle,
   Package,
   PhoneCall,
   RotateCcw,
@@ -43,9 +43,11 @@ export function ChatWidget() {
   const [handoff, setHandoff] = useState(INITIAL_HANDOFF);
   const [handoffSending, setHandoffSending] = useState(false);
   const initializingRef = useRef(false);
+  const pollingRef = useRef(false);
   const endRef = useRef<HTMLDivElement | null>(null);
 
-  const waitingForAdmin = session?.status === 'WAITING_ADMIN' || session?.status === 'ADMIN_ACTIVE';
+  const humanMode = session?.status === 'WAITING_ADMIN' || session?.status === 'ADMIN_ACTIVE';
+  const closed = session?.status === 'CLOSED';
 
   const quickReplies = useMemo(() => {
     for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -59,6 +61,17 @@ export function ChatWidget() {
     if (!open || session || initializingRef.current) return;
     void initializeChat();
   }, [open, session]);
+
+  useEffect(() => {
+    if (!open || !credentials || !session) return;
+
+    const interval = window.setInterval(
+      () => void syncChat(),
+      humanMode ? 4000 : 12_000
+    );
+
+    return () => window.clearInterval(interval);
+  }, [open, credentials, session?.id, humanMode]);
 
   useEffect(() => {
     if (!open) return;
@@ -102,6 +115,21 @@ export function ChatWidget() {
     }
   }
 
+  async function syncChat() {
+    if (!credentials || pollingRef.current || document.visibilityState === 'hidden') return;
+
+    pollingRef.current = true;
+    try {
+      const response = await getChatSession(credentials);
+      setSession(response.data.session);
+      setMessages(response.data.messages ?? []);
+    } catch {
+      // Đồng bộ nền không làm gián đoạn nội dung khách đang xem.
+    } finally {
+      pollingRef.current = false;
+    }
+  }
+
   async function resetChat() {
     clearChatCredentials();
     setCredentials(null);
@@ -115,7 +143,7 @@ export function ChatWidget() {
 
   async function handleSend(rawMessage?: string) {
     const content = (rawMessage ?? input).trim();
-    if (!content || !credentials || sending || waitingForAdmin) return;
+    if (!content || !credentials || sending || closed) return;
 
     const temporaryId = `temp-${Date.now()}`;
     const temporaryMessage: ChatMessage = {
@@ -211,12 +239,18 @@ export function ChatWidget() {
     <section className="fixed inset-x-3 bottom-3 z-[70] flex max-h-[82vh] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[650px] sm:w-[390px]">
       <header className="flex items-center gap-3 bg-dark-900 px-4 py-3 text-white">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600">
-          <Bot size={21} />
+          {humanMode ? <Headphones size={21} /> : <Bot size={21} />}
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-sm font-black">Trợ lý tư vấn Tiến Phát</h2>
+          <h2 className="truncate text-sm font-black">Tư vấn Tiến Phát</h2>
           <p className="text-xs text-gray-400">
-            {waitingForAdmin ? 'Đã chuyển cho nhân viên' : 'Tư vấn theo dữ liệu sản phẩm'}
+            {session?.status === 'ADMIN_ACTIVE'
+              ? 'Nhân viên đang trực tiếp hỗ trợ'
+              : session?.status === 'WAITING_ADMIN'
+                ? 'Đang chờ nhân viên tiếp nhận'
+                : closed
+                  ? 'Cuộc trò chuyện đã kết thúc'
+                  : 'Trợ lý tư vấn theo dữ liệu sản phẩm'}
           </p>
         </div>
         <button type="button" onClick={resetChat} className="rounded-lg p-2 text-gray-400 hover:bg-white/10 hover:text-white" title="Cuộc trò chuyện mới">
@@ -230,7 +264,7 @@ export function ChatWidget() {
       <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50 px-3 py-4">
         {loading ? (
           <div className="flex h-full min-h-64 items-center justify-center gap-2 text-sm text-gray-400">
-            <Loader2 size={19} className="animate-spin" /> Đang kết nối trợ lý...
+            <Loader2 size={19} className="animate-spin" /> Đang kết nối tư vấn...
           </div>
         ) : (
           messages.map((message) => (
@@ -238,7 +272,7 @@ export function ChatWidget() {
           ))
         )}
 
-        {!loading && !waitingForAdmin && quickReplies.length > 0 && (
+        {!loading && !humanMode && !closed && quickReplies.length > 0 && (
           <div className="flex flex-wrap gap-2 pl-9">
             {quickReplies.map((reply) => (
               <button
@@ -254,7 +288,7 @@ export function ChatWidget() {
           </div>
         )}
 
-        {showHandoff && !waitingForAdmin && (
+        {showHandoff && !humanMode && !closed && (
           <form onSubmit={handleHandoff} className="ml-9 space-y-3 rounded-xl border border-brand-100 bg-white p-3 shadow-sm">
             <div>
               <p className="text-sm font-bold text-gray-900">Gặp nhân viên tư vấn</p>
@@ -274,9 +308,17 @@ export function ChatWidget() {
           </form>
         )}
 
-        {waitingForAdmin && (
-          <div className="mx-2 rounded-xl border border-green-100 bg-green-50 p-3 text-xs leading-5 text-green-800">
-            Yêu cầu đã được gửi đến Tiến Phát. Nhân viên sẽ liên hệ qua thông tin anh/chị đã cung cấp trong giờ làm việc.
+        {humanMode && (
+          <div className={`mx-2 rounded-xl border p-3 text-xs leading-5 ${session?.status === 'ADMIN_ACTIVE' ? 'border-blue-100 bg-blue-50 text-blue-800' : 'border-amber-100 bg-amber-50 text-amber-800'}`}>
+            {session?.status === 'ADMIN_ACTIVE'
+              ? 'Nhân viên Tiến Phát đang trực tiếp hỗ trợ. Anh/chị có thể tiếp tục trao đổi trong ô chat bên dưới.'
+              : 'Yêu cầu đã được gửi đến Tiến Phát. Anh/chị vẫn có thể nhắn thêm thông tin trong khi chờ nhân viên tiếp nhận.'}
+          </div>
+        )}
+
+        {closed && (
+          <div className="mx-2 rounded-xl border border-gray-200 bg-white p-3 text-xs leading-5 text-gray-600">
+            Cuộc trò chuyện đã kết thúc. Nhấn biểu tượng làm mới ở phía trên để bắt đầu yêu cầu mới.
           </div>
         )}
         <div ref={endRef} />
@@ -296,21 +338,21 @@ export function ChatWidget() {
                 void handleSend();
               }
             }}
-            disabled={loading || sending || waitingForAdmin}
+            disabled={loading || sending || closed}
             rows={1}
             maxLength={1000}
-            placeholder={waitingForAdmin ? 'Yêu cầu đã chuyển cho nhân viên' : 'Ví dụ: Tôi cần gạch 3060 lát sàn...'}
+            placeholder={closed ? 'Cuộc trò chuyện đã kết thúc' : humanMode ? 'Nhắn trực tiếp cho nhân viên...' : 'Ví dụ: Tôi cần gạch 3060 lát sàn...'}
             className="min-h-11 max-h-24 flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-brand-400 disabled:bg-gray-100"
           />
           <button
             type="submit"
-            disabled={!input.trim() || loading || sending || waitingForAdmin}
+            disabled={!input.trim() || loading || sending || closed}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
           </button>
         </form>
-        {!waitingForAdmin && (
+        {!humanMode && !closed && (
           <button type="button" onClick={() => setShowHandoff(true)} className="mt-2 flex w-full items-center justify-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-brand-600">
             <UserRound size={14} /> Gặp nhân viên tư vấn
           </button>
@@ -321,16 +363,28 @@ export function ChatWidget() {
 }
 
 function ChatBubble({ message }: { message: ChatMessage }) {
+  if (message.sender === 'SYSTEM') {
+    return (
+      <div className="flex justify-center px-8">
+        <span className="rounded-full bg-gray-200 px-3 py-1 text-center text-[11px] text-gray-500">
+          {message.content}
+        </span>
+      </div>
+    );
+  }
+
   const fromCustomer = message.sender === 'CUSTOMER';
+  const fromAdmin = message.sender === 'ADMIN';
   const recommendations = message.metadata?.recommendations ?? [];
 
   return (
     <div className={`flex items-start gap-2 ${fromCustomer ? 'flex-row-reverse' : ''}`}>
-      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${fromCustomer ? 'bg-brand-100 text-brand-700' : 'bg-dark-900 text-white'}`}>
-        {fromCustomer ? <UserRound size={14} /> : <Bot size={14} />}
+      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${fromCustomer ? 'bg-brand-100 text-brand-700' : fromAdmin ? 'bg-blue-600 text-white' : 'bg-dark-900 text-white'}`}>
+        {fromCustomer ? <UserRound size={14} /> : fromAdmin ? <Headphones size={14} /> : <Bot size={14} />}
       </div>
-      <div className={`min-w-0 max-w-[82%] ${fromCustomer ? 'items-end' : 'items-start'} flex flex-col gap-2`}>
-        <div className={`whitespace-pre-line rounded-2xl px-3 py-2 text-sm leading-5 ${fromCustomer ? 'rounded-tr-md bg-brand-600 text-white' : 'rounded-tl-md border border-gray-100 bg-white text-gray-700 shadow-sm'}`}>
+      <div className={`flex min-w-0 max-w-[82%] flex-col gap-1.5 ${fromCustomer ? 'items-end' : 'items-start'}`}>
+        {fromAdmin && <span className="px-1 text-[10px] font-semibold text-blue-600">Nhân viên Tiến Phát</span>}
+        <div className={`whitespace-pre-line rounded-2xl px-3 py-2 text-sm leading-5 ${fromCustomer ? 'rounded-tr-md bg-brand-600 text-white' : fromAdmin ? 'rounded-tl-md border border-blue-100 bg-blue-50 text-gray-800' : 'rounded-tl-md border border-gray-100 bg-white text-gray-700 shadow-sm'}`}>
           {message.content}
         </div>
         {recommendations.length > 0 && (

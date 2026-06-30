@@ -9,12 +9,13 @@ datasource db {
 }
 
 model Admin {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  password  String
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String        @id @default(uuid())
+  username     String        @unique
+  password     String
+  name         String
+  chatSessions ChatSession[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Category {
@@ -113,12 +114,17 @@ model ChatSession {
   detectedColor    String?
   sourcePage       String?
   handoffContactId String?
+  assignedAdminId  String?
+  assignedAdmin    Admin?            @relation(fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  acceptedAt       DateTime?
+  closedAt         DateTime?
   lastMessageAt    DateTime          @default(now())
   messages         ChatMessage[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
   @@index([status, lastMessageAt])
+  @@index([assignedAdminId, status])
   @@index([lastMessageAt])
 }
 
@@ -133,6 +139,7 @@ model ChatMessage {
   createdAt DateTime          @default(now())
 
   @@index([sessionId, createdAt])
+  @@index([sessionId, sender, isRead])
 }
 
 model SiteConfig {

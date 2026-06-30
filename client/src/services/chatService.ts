@@ -1,5 +1,12 @@
 import { api } from './api';
-import type { ChatMessage, ChatSession } from '@/types';
+import type {
+  AdminChatSessionDetail,
+  AdminChatSessionListItem,
+  AdminChatStats,
+  ChatMessage,
+  ChatSession,
+  ChatSessionStatus,
+} from '@/types';
 
 export type ChatCredentials = {
   sessionId: string;
@@ -94,4 +101,54 @@ export function requestHumanHandoff(
     payload,
     { headers: tokenHeaders(credentials.accessToken), timeoutMs: 25_000 }
   );
+}
+
+export function adminGetChatSessions(params: {
+  status?: ChatSessionStatus;
+  search?: string;
+  page?: number;
+  limit?: number;
+} = {}) {
+  const query = new URLSearchParams();
+  if (params.status) query.set('status', params.status);
+  if (params.search) query.set('search', params.search);
+  if (params.page) query.set('page', String(params.page));
+  if (params.limit) query.set('limit', String(params.limit));
+
+  const qs = query.toString();
+  return api.get<{
+    success: boolean;
+    sessions: AdminChatSessionListItem[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>(`/chat/admin/sessions${qs ? `?${qs}` : ''}`);
+}
+
+export function adminGetChatSession(sessionId: string) {
+  return api.get<{ success: boolean; data: AdminChatSessionDetail }>(
+    `/chat/admin/sessions/${sessionId}`
+  );
+}
+
+export function adminSendChatMessage(sessionId: string, message: string) {
+  return api.post<{
+    success: boolean;
+    data: {
+      session: ChatSession;
+      message: ChatMessage;
+    };
+  }>(`/chat/admin/sessions/${sessionId}/messages`, { message });
+}
+
+export function adminUpdateChatStatus(sessionId: string, status: ChatSessionStatus) {
+  return api.put<{ success: boolean; data: AdminChatSessionDetail }>(
+    `/chat/admin/sessions/${sessionId}/status`,
+    { status }
+  );
+}
+
+export function adminGetChatStats() {
+  return api.get<{ success: boolean; data: AdminChatStats }>('/chat/admin/stats');
 }
