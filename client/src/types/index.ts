@@ -71,6 +71,63 @@ export interface ContactMessage {
   createdAt: string;
 }
 
+export type ChatSessionStatus = 'AI_ACTIVE' | 'WAITING_ADMIN' | 'ADMIN_ACTIVE' | 'CLOSED';
+export type ChatMessageSender = 'CUSTOMER' | 'ASSISTANT' | 'ADMIN' | 'SYSTEM';
+
+export interface ChatProductRecommendation {
+  id: string;
+  name: string;
+  slug: string;
+  price: number | null;
+  unit: string | null;
+  brand: string | null;
+  size: string | null;
+  category: {
+    name: string;
+    slug: string;
+  };
+  imageUrl?: string;
+  reasons: string[];
+  exactSize: boolean;
+  score: number;
+}
+
+export interface ChatMessageMetadata {
+  recommendations?: ChatProductRecommendation[];
+  quickReplies?: string[];
+  detected?: Record<string, unknown>;
+  handoff?: boolean;
+  contactId?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  sessionId: string;
+  sender: ChatMessageSender;
+  content: string;
+  metadata?: ChatMessageMetadata | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface ChatSession {
+  id: string;
+  status: ChatSessionStatus;
+  customerName: string | null;
+  phone: string | null;
+  email: string | null;
+  detectedSize: string | null;
+  detectedIntent: string | null;
+  detectedCategory: string | null;
+  detectedSpace: string | null;
+  detectedBrand: string | null;
+  detectedColor: string | null;
+  sourcePage: string | null;
+  lastMessageAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SiteConfig {
   site_name: string;
   site_phone: string;
