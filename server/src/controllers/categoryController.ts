@@ -9,6 +9,7 @@ export async function listCategories(req: Request, res: Response) {
   try {
     const activeOnly = req.query['activeOnly'] === 'true';
     const categories = await getAllCategories(activeOnly);
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=900');
     res.json({ success: true, data: categories });
   } catch (err) {
     res.status(500).json({ success: false, message: (err as Error).message });
@@ -19,6 +20,7 @@ export async function getCategoryDetail(req: Request, res: Response) {
   try {
     const category = await getCategoryBySlug(req.params['slug'] as string);
     if (!category) return res.status(404).json({ success: false, message: 'Không tìm thấy danh mục' });
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=900');
     res.json({ success: true, data: category });
   } catch (err) {
     res.status(500).json({ success: false, message: (err as Error).message });
