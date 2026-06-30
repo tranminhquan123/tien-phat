@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "test": "tsx --test src/utils/advisoryParser.test.ts src/utils/advisoryScoring.test.ts",
+    "test": "tsx --test src/utils/advisoryParser.test.ts src/utils/advisoryScoring.test.ts src/utils/adminAiRules.test.ts",
     "build": "tsc && tsc-alias",
     "start": "node scripts/start.js",
     "db:migrate": "prisma migrate dev",
