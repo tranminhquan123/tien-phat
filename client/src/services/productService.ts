@@ -52,11 +52,11 @@ export function getProducts(params: {
   if (params.limit) qs.set('limit', String(params.limit));
 
   const query = qs.toString();
-  return api.get<ProductListResponse>(`/products${query ? `?${query}` : ''}`);
+  return api.getCached<ProductListResponse>(`/products${query ? `?${query}` : ''}`, 60_000);
 }
 
 export async function getProductBySlug(slug: string) {
-  const response = await api.get<ProductDetailResponse>(`/products/${slug}`);
+  const response = await api.getCached<ProductDetailResponse>(`/products/${slug}`, 2 * 60_000);
   const category = response.data.product.category;
 
   return {
@@ -87,7 +87,8 @@ export function adminGetProducts(params: {
 }
 
 export function adminCreateProduct(data: ProductMutationPayload) {
-  return api.post<{ success: boolean; data: Product }>('/products/admin', data);
+  return api.post<{ success: boolean; data: Product }>('/products/admin', data)
+    .then((response) => { api.clearCache(); return response; });
 }
 
 export function adminUpdateProduct(id: string, data: ProductMutationPayload) {
