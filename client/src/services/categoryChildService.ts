@@ -7,6 +7,7 @@ import {
   parseTileSizes,
   type TileSizeOption,
 } from '@/constants/tileSizes';
+import type { SiteConfig } from '@/types';
 
 export type CategoryChildOption = TileSizeOption;
 
@@ -30,9 +31,7 @@ export function normalizeCategoryChild(
   categorySlug: string,
   input: string
 ): CategoryChildOption | null {
-  if (categorySlug === 'gach-op-lat') {
-    return normalizeTileSize(input);
-  }
+  if (categorySlug === 'gach-op-lat') return normalizeTileSize(input);
 
   const label = input.trim().replace(/\s+/g, ' ');
   const value = toSlug(label);
@@ -88,10 +87,10 @@ function parseGenericChildren(raw?: string | null): CategoryChildOption[] {
   }
 }
 
-export async function getCategoryChildrenMap(categorySlugs: string[]) {
-  const response = await getSiteConfig();
-  const config = response.data ?? {};
-
+export function buildCategoryChildrenMap(
+  categorySlugs: string[],
+  config: Partial<SiteConfig>
+) {
   return categorySlugs.reduce<Record<string, CategoryChildOption[]>>((result, slug) => {
     const raw = config[getCategoryChildConfigKey(slug)];
     result[slug] = slug === 'gach-op-lat'
@@ -99,6 +98,11 @@ export async function getCategoryChildrenMap(categorySlugs: string[]) {
       : parseGenericChildren(raw);
     return result;
   }, {});
+}
+
+export async function getCategoryChildrenMap(categorySlugs: string[]) {
+  const response = await getSiteConfig();
+  return buildCategoryChildrenMap(categorySlugs, response.data ?? {});
 }
 
 export async function getCategoryChildren(categorySlug: string) {
