@@ -8,9 +8,7 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-import { getCategories } from '@/services/categoryService';
-import { getProducts } from '@/services/productService';
-import { getBanners } from '@/services/configService';
+import { getHomepageData } from '@/services/homeService';
 import { ProductCard } from '@/components/ProductCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { Category, Product, Banner } from '@/types';
@@ -23,47 +21,48 @@ const WHY_US = [
 ];
 
 const FALLBACK_BANNERS: Banner[] = [
-  { id: '1', title: 'Vật Liệu Xây Dựng Chất Lượng Cao', subtitle: 'Cam kết chính hãng – Giá tốt nhất thị trường', imageUrl: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1400&q=80', isActive: true, sortOrder: 1 },
-  { id: '2', title: 'Trang Trí Nội Thất Đẳng Cấp', subtitle: 'Hàng ngàn mẫu mã đa dạng cho mọi không gian', imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1400&q=80', isActive: true, sortOrder: 2 },
-  { id: '3', title: 'Giao Hàng Tận Công Trình', subtitle: 'Nhanh chóng – Đúng hẹn – Trọn gói', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80', isActive: true, sortOrder: 3 },
+  { id: '1', title: 'Vật Liệu Xây Dựng Chất Lượng Cao', subtitle: 'Cam kết chính hãng – Giá tốt nhất thị trường', imageUrl: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1400&q=75&auto=format', isActive: true, sortOrder: 1 },
+  { id: '2', title: 'Trang Trí Nội Thất Đẳng Cấp', subtitle: 'Hàng ngàn mẫu mã đa dạng cho mọi không gian', imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1400&q=75&auto=format', isActive: true, sortOrder: 2 },
+  { id: '3', title: 'Giao Hàng Tận Công Trình', subtitle: 'Nhanh chóng – Đúng hẹn – Trọn gói', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=75&auto=format', isActive: true, sortOrder: 3 },
 ];
 
 export function HomePage() {
-  const [banners, setBanners] = useState<Banner[]>([]);
+  // Hero hiển thị ngay, không chờ backend Render khởi động.
+  const [banners, setBanners] = useState<Banner[]>(FALLBACK_BANNERS);
   const [categories, setCategories] = useState<Category[]>([]);
   const [featured, setFeatured] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      getBanners(true).catch(() => ({ data: [] })),
-      getCategories(true).catch(() => ({ data: [] })),
-      getProducts({ featured: true, limit: 8 }).catch(() => ({ products: [] })),
-    ]).then(([bannersRes, catsRes, prodsRes]) => {
-      setBanners((bannersRes.data?.length ? bannersRes.data : FALLBACK_BANNERS));
-      setCategories(catsRes.data ?? []);
-      setFeatured(prodsRes.products ?? []);
-    }).finally(() => setLoading(false));
+    getHomepageData()
+      .then((response) => {
+        if (response.data.banners?.length) setBanners(response.data.banners);
+        setCategories(response.data.categories ?? []);
+        setFeatured(response.data.featured ?? []);
+      })
+      .catch((error) => console.error('Không thể tải dữ liệu trang chủ:', error))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
     <div>
-      {/* ── HERO SLIDER ─────────────────────────────────── */}
-      <section className="relative">
+      <section className="relative bg-gray-200">
         <Swiper
           modules={[Autoplay, Pagination, Navigation]}
           autoplay={{ delay: 5000, disableOnInteraction: false }}
           pagination={{ clickable: true }}
           navigation
-          loop
+          loop={banners.length > 1}
           className="w-full h-[420px] md:h-[540px]"
         >
-          {banners.map((banner) => (
+          {banners.map((banner, index) => (
             <SwiperSlide key={banner.id}>
               <div className="relative w-full h-full">
                 <img
                   src={banner.imageUrl}
                   alt={banner.title ?? 'Banner'}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding={index === 0 ? 'sync' : 'async'}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex items-center">
@@ -94,7 +93,6 @@ export function HomePage() {
         </Swiper>
       </section>
 
-      {/* ── DANH MỤC ────────────────────────────────────── */}
       <section className="py-14 bg-gray-50">
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-8">
@@ -119,7 +117,7 @@ export function HomePage() {
                 >
                   <div className="w-16 h-16 rounded-xl bg-brand-50 flex items-center justify-center group-hover:bg-brand-100 transition-colors">
                     {cat.imageUrl ? (
-                      <img src={cat.imageUrl} alt={cat.name} className="w-10 h-10 object-contain" />
+                      <img src={cat.imageUrl} alt={cat.name} loading="lazy" decoding="async" className="w-10 h-10 object-contain" />
                     ) : (
                       <Package size={28} className="text-brand-500" />
                     )}
@@ -128,9 +126,7 @@ export function HomePage() {
                     <p className="text-sm font-semibold text-gray-800 group-hover:text-brand-600 transition-colors leading-tight">
                       {cat.name}
                     </p>
-                    {cat._count && (
-                      <p className="text-xs text-gray-400 mt-0.5">{cat._count.products} SP</p>
-                    )}
+                    {cat._count && <p className="text-xs text-gray-400 mt-0.5">{cat._count.products} SP</p>}
                   </div>
                 </Link>
               ))}
@@ -139,7 +135,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── SẢN PHẨM NỔI BẬT ───────────────────────────── */}
       {featured.length > 0 && (
         <section className="py-14">
           <div className="container mx-auto">
@@ -153,15 +148,12 @@ export function HomePage() {
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {featured.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+              {featured.map((product) => <ProductCard key={product.id} product={product} />)}
             </div>
           </div>
         </section>
       )}
 
-      {/* ── TẠI SAO CHỌN TIẾN PHÁT ─────────────────────── */}
       <section className="py-14 bg-dark-900 text-white">
         <div className="container mx-auto">
           <div className="text-center mb-10">
@@ -171,9 +163,7 @@ export function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {WHY_US.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="p-6 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-                <div className="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-4">
-                  <Icon size={22} />
-                </div>
+                <div className="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-4"><Icon size={22} /></div>
                 <h3 className="font-bold text-base mb-2">{title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
               </div>
@@ -182,7 +172,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── STATS ───────────────────────────────────────── */}
       <section className="py-12 bg-brand-600 text-white">
         <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
@@ -199,20 +188,13 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA LIÊN HỆ ─────────────────────────────────── */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto text-center">
           <h2 className="section-title mb-3">Cần tư vấn vật liệu xây dựng?</h2>
-          <p className="text-gray-500 mb-8 max-w-md mx-auto">
-            Nhân viên của Tiến Phát sẵn sàng hỗ trợ bạn lựa chọn vật liệu phù hợp nhất cho công trình.
-          </p>
+          <p className="text-gray-500 mb-8 max-w-md mx-auto">Nhân viên của Tiến Phát sẵn sàng hỗ trợ bạn lựa chọn vật liệu phù hợp nhất cho công trình.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="tel:0764432015" className="btn-primary text-base px-8 py-3 shadow-md shadow-brand-200">
-              📞 Gọi ngay: 0764 432 015
-            </a>
-            <Link to="/lien-he" className="btn-outline text-base px-8 py-3">
-              Gửi yêu cầu tư vấn
-            </Link>
+            <a href="tel:0764432015" className="btn-primary text-base px-8 py-3 shadow-md shadow-brand-200">📞 Gọi ngay: 0764 432 015</a>
+            <Link to="/lien-he" className="btn-outline text-base px-8 py-3">Gửi yêu cầu tư vấn</Link>
           </div>
         </div>
       </section>
