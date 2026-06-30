@@ -6,7 +6,10 @@ import {
   normalizeSizeValue,
   type AdvisoryAnalysis,
 } from '@/utils/advisoryParser';
-import { rankProducts } from '@/utils/advisoryScoring';
+import {
+  rankProducts,
+  type RankedProduct,
+} from '@/utils/advisoryScoring';
 
 const DEFAULT_SIZES = [
   '30x60', '30x30', '40x40', '40x80', '60x60', '80x80', '100x100',
@@ -172,7 +175,7 @@ function buildReply(
 }
 
 function toRecommendation(
-  item: ReturnType<typeof rankProducts<CatalogProduct>>[number]
+  item: RankedProduct<CatalogProduct>
 ): ProductRecommendation {
   const image = item.product.images[0];
 
