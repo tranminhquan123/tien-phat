@@ -24,11 +24,31 @@ async function schemaIsReady() {
         WHERE table_schema = 'public'
           AND table_name = 'ChatSession'
           AND column_name = 'detectedColor'
-      ) AS "detectedColor"
+      ) AS "detectedColor",
+      EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'ChatSession'
+          AND column_name = 'assignedAdminId'
+      ) AS "assignedAdminId",
+      EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'ChatSession'
+          AND column_name = 'acceptedAt'
+      ) AS "acceptedAt"
   `);
 
   const status = rows[0] || {};
-  return Boolean(status.chatSession && status.chatMessage && status.detectedColor);
+  return Boolean(
+    status.chatSession
+    && status.chatMessage
+    && status.detectedColor
+    && status.assignedAdminId
+    && status.acceptedAt
+  );
 }
 
 function pushSchema() {
