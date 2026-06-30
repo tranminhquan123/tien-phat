@@ -42,6 +42,20 @@ export const handoffChatSchema = z.object({
   note: optionalText(500),
 });
 
+export const adminChatReplySchema = z.object({
+  message: z
+    .string()
+    .trim()
+    .min(1, 'Nội dung phản hồi không được để trống')
+    .max(2000, 'Phản hồi tối đa 2000 ký tự'),
+});
+
+export const adminChatStatusSchema = z.object({
+  status: z.enum(['AI_ACTIVE', 'WAITING_ADMIN', 'ADMIN_ACTIVE', 'CLOSED']),
+});
+
 export type CreateChatSessionInput = z.infer<typeof createChatSessionSchema>;
 export type SendChatMessageInput = z.infer<typeof sendChatMessageSchema>;
 export type HandoffChatInput = z.infer<typeof handoffChatSchema>;
+export type AdminChatReplyInput = z.infer<typeof adminChatReplySchema>;
+export type AdminChatStatusInput = z.infer<typeof adminChatStatusSchema>;
