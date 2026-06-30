@@ -75,12 +75,25 @@ async function loadCatalogFromDatabase() {
   const [products, config] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true },
-      include: {
-        category: { select: { id: true, name: true, slug: true } },
-        images: {
-          orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
-          take: 1,
-        },
+      // Không tải data URL ảnh của toàn bộ danh mục. Chỉ lấy ảnh cho 6 kết quả tốt nhất sau khi chấm điểm.
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        price: true,
+        unit: true,
+        brand: true,
+        size: true,
+        color: true,
+        productType: true,
+        surface: true,
+        glaze: true,
+        application: true,
+        pattern: true,
+        spaces: true,
+        isFeatured: true,
+        category: { select: { name: true, slug: true } },
       },
       orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'desc' }],
       take: 400,
@@ -175,10 +188,9 @@ function buildReply(
 }
 
 function toRecommendation(
-  item: RankedProduct<CatalogProduct>
+  item: RankedProduct<CatalogProduct>,
+  imageUrl?: string
 ): ProductRecommendation {
-  const image = item.product.images[0];
-
   return {
     id: item.product.id,
     name: item.product.name,
@@ -191,11 +203,36 @@ function toRecommendation(
       name: item.product.category.name,
       slug: item.product.category.slug,
     },
-    imageUrl: image?.url,
+    imageUrl,
     reasons: item.reasons.slice(0, 3),
     exactSize: item.exactSize,
     score: item.score,
   };
+}
+
+async function attachRecommendationImages(
+  ranked: RankedProduct<CatalogProduct>[]
+) {
+  if (ranked.length === 0) return [];
+
+  const imageRows = await prisma.product.findMany({
+    where: { id: { in: ranked.map((item) => item.product.id) } },
+    select: {
+      id: true,
+      images: {
+        select: { url: true },
+        orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
+        take: 1,
+      },
+    },
+  });
+  const imageByProductId = new Map(
+    imageRows.map((row) => [row.id, row.images[0]?.url])
+  );
+
+  return ranked.map((item) =>
+    toRecommendation(item, imageByProductId.get(item.product.id))
+  );
 }
 
 export async function recommendProducts(
@@ -210,9 +247,10 @@ export async function recommendProducts(
     analysis.intent || analysis.size || analysis.brand || analysis.color || analysis.space
   );
 
-  const recommendations = hasEnoughInformation
-    ? rankProducts(catalog.products, analysis, 6).map(toRecommendation)
+  const ranked = hasEnoughInformation
+    ? rankProducts(catalog.products, analysis, 6)
     : [];
+  const recommendations = await attachRecommendationImages(ranked);
 
   return {
     analysis,
