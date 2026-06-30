@@ -107,8 +107,10 @@ model ChatSession {
   email            String?
   detectedSize     String?
   detectedIntent   String?
+  detectedCategory String?
   detectedSpace    String?
   detectedBrand    String?
+  detectedColor    String?
   sourcePage       String?
   handoffContactId String?
   lastMessageAt    DateTime          @default(now())
