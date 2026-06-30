@@ -32,7 +32,7 @@ async function schemaIsReady() {
 }
 
 function pushSchema() {
-  const prismaCli = require.resolve('prisma/build/index.js');
+  const prismaCli = require.resolve('prisma');
   execFileSync(process.execPath, [prismaCli, 'db', 'push'], {
     stdio: 'inherit',
     env: process.env,
