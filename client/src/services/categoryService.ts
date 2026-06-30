@@ -3,9 +3,10 @@ import { api } from './api';
 import type { Category } from '@/types';
 
 export function getCategories(activeOnly = false) {
-  return api.get<{ success: boolean; data: Category[] }>(
-    `/categories${activeOnly ? '?activeOnly=true' : ''}`
-  );
+  const path = `/categories${activeOnly ? '?activeOnly=true' : ''}`;
+  return activeOnly
+    ? api.getCached<{ success: boolean; data: Category[] }>(path, 5 * 60_000)
+    : api.get<{ success: boolean; data: Category[] }>(path);
 }
 
 export function adminCreateCategory(data: Partial<Category>) {
