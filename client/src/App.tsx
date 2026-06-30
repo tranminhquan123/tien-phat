@@ -21,6 +21,7 @@ const DashboardPage = lazy(() => import('@/pages/Admin/DashboardPage').then((mod
 const AdminProductsPage = lazy(() => import('@/pages/Admin/AdminProductsPage').then((module) => ({ default: module.AdminProductsPage })));
 const AdminProductCreatePage = lazy(() => import('@/pages/Admin/AdminProductCreatePage').then((module) => ({ default: module.AdminProductCreatePage })));
 const AdminCategoriesPage = lazy(() => import('@/pages/Admin/AdminCategoriesPage').then((module) => ({ default: module.AdminCategoriesPage })));
+const AdminChatPage = lazy(() => import('@/pages/Admin/AdminChatPage').then((module) => ({ default: module.AdminChatPage })));
 const AdminContactsPage = lazy(() => import('@/pages/Admin/AdminContactsPage').then((module) => ({ default: module.AdminContactsPage })));
 const AdminSettingsPage = lazy(() => import('@/pages/Admin/AdminSettingsPage').then((module) => ({ default: module.AdminSettingsPage })));
 
@@ -66,6 +67,7 @@ export function App() {
             <Route path="san-pham" element={<AdminProductsPage />} />
             <Route path="san-pham/them-moi" element={<AdminProductCreatePage />} />
             <Route path="danh-muc" element={<AdminCategoriesPage />} />
+            <Route path="hoi-thoai" element={<AdminChatPage />} />
             <Route path="lien-he" element={<AdminContactsPage />} />
             <Route path="cai-dat" element={<AdminSettingsPage />} />
           </Route>
