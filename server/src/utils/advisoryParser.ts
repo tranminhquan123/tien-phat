@@ -187,6 +187,14 @@ function findDefinition<T extends { keywords: string[] }>(normalizedText: string
   );
 }
 
+export function getIntentDetails(intent?: AdvisoryIntent | string | null) {
+  return INTENTS.find((definition) => definition.value === intent);
+}
+
+export function getSpaceDetails(space?: string | null) {
+  return SPACES.find((definition) => definition.value === space);
+}
+
 export function detectIntent(message: string) {
   const normalized = normalizeVietnamese(message);
   return findDefinition(normalized, INTENTS);
@@ -208,7 +216,8 @@ export function detectBrand(message: string, availableBrands: string[]) {
 
 export function detectColor(message: string) {
   const normalized = normalizeVietnamese(message);
-  return COLORS.find((color) => normalized.includes(`mau ${color}`) || normalized.includes(` ${color} `));
+  const tokens = new Set(normalized.split(' '));
+  return COLORS.find((color) => normalized.includes(`mau ${color}`) || tokens.has(color));
 }
 
 export function analyzeAdvisoryMessage(
