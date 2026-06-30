@@ -38,7 +38,21 @@ async function schemaIsReady() {
         WHERE table_schema = 'public'
           AND table_name = 'ChatSession'
           AND column_name = 'acceptedAt'
-      ) AS "acceptedAt"
+      ) AS "acceptedAt",
+      EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'ChatSession'
+          AND column_name = 'aiSummary'
+      ) AS "aiSummary",
+      EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'ChatSession'
+          AND column_name = 'lastAnalyzedAt'
+      ) AS "lastAnalyzedAt"
   `);
 
   const status = rows[0] || {};
@@ -48,6 +62,8 @@ async function schemaIsReady() {
     && status.detectedColor
     && status.assignedAdminId
     && status.acceptedAt
+    && status.aiSummary
+    && status.lastAnalyzedAt
   );
 }
 
