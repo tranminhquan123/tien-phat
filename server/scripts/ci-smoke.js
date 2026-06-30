@@ -143,6 +143,14 @@ async function main() {
     });
     assert.equal(restored.data.session.id, sessionId);
 
+    const sizeSelection = await request(`/api/chat/sessions/${sessionId}/messages`, {
+      method: 'POST',
+      headers: { 'X-Chat-Token': accessToken },
+      body: JSON.stringify({ message: 'Tìm theo kích thước' }),
+    });
+    const sizeReplies = sizeSelection.data.assistantMessage?.metadata?.quickReplies || [];
+    assert.ok(sizeReplies.includes('Kích thước 30 x 60'));
+
     const answered = await request(`/api/chat/sessions/${sessionId}/messages`, {
       method: 'POST',
       headers: { 'X-Chat-Token': accessToken },
@@ -175,7 +183,7 @@ async function main() {
     });
     assert.ok(contact?.message.includes('Nội dung hội thoại'));
 
-    console.log('✅ Smoke test API, tư vấn sản phẩm, lưu chat và handoff đã thành công.');
+    console.log('✅ Smoke test API, chọn kích thước, tư vấn sản phẩm, lưu chat và handoff đã thành công.');
   } finally {
     server.kill('SIGTERM');
     await cleanup({
