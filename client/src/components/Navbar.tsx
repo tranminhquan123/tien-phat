@@ -4,8 +4,9 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, X, Phone, ChevronDown, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { getCategories } from '@/services/categoryService';
+import { getSiteConfig } from '@/services/configService';
 import {
-  getCategoryChildrenMap,
+  buildCategoryChildrenMap,
   type CategoryChildOption,
 } from '@/services/categoryChildService';
 import type { Category } from '@/types';
@@ -37,11 +38,7 @@ function buildNavLinks(
 
   return [
     { to: '/', label: 'Trang chủ' },
-    {
-      label: 'Sản phẩm',
-      to: '/san-pham',
-      children: productCategories,
-    },
+    { label: 'Sản phẩm', to: '/san-pham', children: productCategories },
     { to: '/gioi-thieu', label: 'Giới thiệu' },
     { to: '/lien-he', label: 'Liên hệ' },
   ];
@@ -62,12 +59,16 @@ export function Navbar() {
   );
 
   useEffect(() => {
-    getCategories(true)
-      .then(async (response) => {
-        const list = response.data ?? [];
-        const childMap = await getCategoryChildrenMap(list.map((category) => category.slug));
+    Promise.all([getCategories(true), getSiteConfig()])
+      .then(([categoryResponse, configResponse]) => {
+        const list = categoryResponse.data ?? [];
         setCategories(list);
-        setChildrenBySlug(childMap);
+        setChildrenBySlug(
+          buildCategoryChildrenMap(
+            list.map((category) => category.slug),
+            configResponse.data ?? {}
+          )
+        );
       })
       .catch(() => {
         setCategories([]);
@@ -77,7 +78,7 @@ export function Navbar() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
