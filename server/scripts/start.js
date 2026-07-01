@@ -8,16 +8,29 @@ async function schemaIsReady() {
   const rows = await prisma.$queryRawUnsafe(`
     SELECT
       to_regclass('public."ChatSession"') IS NOT NULL AS "chatReady",
-      to_regclass('public."ContactActivity"') IS NOT NULL AS "crmTableReady",
+      to_regclass('public."ContactActivity"') IS NOT NULL AS "crmReady",
+      to_regclass('public."AdminAuditLog"') IS NOT NULL AS "employeeAuditReady",
       EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_schema='public'
           AND table_name='ContactMessage'
           AND column_name='followUpAt'
-      ) AS "crmColumnReady"
+      ) AS "crmColumnReady",
+      EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema='public'
+          AND table_name='Admin'
+          AND column_name='role'
+      ) AS "employeeRoleReady"
   `);
   const status = rows[0] || {};
-  return Boolean(status.chatReady && status.crmTableReady && status.crmColumnReady);
+  return Boolean(
+    status.chatReady
+    && status.crmReady
+    && status.crmColumnReady
+    && status.employeeAuditReady
+    && status.employeeRoleReady
+  );
 }
 
 function pushSchema() {
@@ -26,6 +39,32 @@ function pushSchema() {
     stdio: 'inherit',
     env: process.env,
   });
+}
+
+async function ensureOwnerExists() {
+  const client = new PrismaClient();
+  try {
+    await client.$executeRawUnsafe(`
+      UPDATE "Admin"
+      SET "role" = 'OWNER'
+      WHERE "id" = (
+        SELECT "id"
+        FROM "Admin"
+        WHERE "deletedAt" IS NULL
+        ORDER BY "createdAt" ASC
+        LIMIT 1
+      )
+      AND NOT EXISTS (
+        SELECT 1
+        FROM "Admin"
+        WHERE "role" = 'OWNER'
+          AND "isActive" = true
+          AND "deletedAt" IS NULL
+      )
+    `);
+  } finally {
+    await client.$disconnect();
+  }
 }
 
 async function start() {
@@ -40,6 +79,7 @@ async function start() {
   await prisma.$disconnect();
   if (!ready) pushSchema();
   else console.log('Prisma schema đã sẵn sàng.');
+  await ensureOwnerExists();
   require('../dist/src/index.js');
 }
 
