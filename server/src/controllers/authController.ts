@@ -1,14 +1,23 @@
 // src/controllers/authController.ts
 import type { Request, Response } from 'express';
 import { loginAdmin, changePassword } from '@/services/authService';
+import { prisma } from '@/lib/prisma';
 import type { AuthRequest } from '@/types';
 
 export async function login(req: Request, res: Response) {
-  const { username, password } = req.body;
+  const username = String(req.body?.username || '').trim().toLowerCase();
+  const password = String(req.body?.password || '');
   if (!username || !password) {
     return res.status(400).json({ success: false, message: 'Cần nhập username và password' });
   }
   try {
+    const account = await prisma.admin.findUnique({
+      where: { username },
+      select: { isActive: true, deletedAt: true },
+    });
+    if (account && (!account.isActive || account.deletedAt)) {
+      return res.status(401).json({ success: false, message: 'Tài khoản đã ngừng hoạt động' });
+    }
     const result = await loginAdmin(username, password);
     res.json({ success: true, data: result });
   } catch (err) {
