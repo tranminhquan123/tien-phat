@@ -4,8 +4,8 @@ import toast from 'react-hot-toast';
 import { TeamFormModal } from '@/components/team/TeamFormModal';
 import { TeamStatsCards } from '@/components/team/TeamStatsCards';
 import { getEmployee, getEmployees, getEmployeeStats } from '@/services/employeeClient';
-import { addTeamMember, saveTeamMember, type TeamMemberInput } from '@/services/teamWriteClient';
-import { api } from '@/services/api';
+import { createEmployee, updateEmployee, updateEmployeeStatus } from '@/services/employeeWriteClient';
+import type { TeamMemberInput } from '@/services/teamWriteClient';
 import type { TeamMember, TeamRole, TeamStats } from '@/types/teamMember';
 
 const EMPTY_STATS: TeamStats = {
@@ -95,8 +95,8 @@ export function AdminEmployeesPage() {
   async function save(data: TeamMemberInput) {
     setSaving(true);
     try {
-      if (editing) await saveTeamMember(editing.id, data);
-      else await addTeamMember(data);
+      if (editing) await updateEmployee(editing.id, data);
+      else await createEmployee(data);
       toast.success(editing ? 'Đã cập nhật nhân viên' : 'Đã thêm nhân viên');
       setFormOpen(false);
       await load();
@@ -118,7 +118,7 @@ export function AdminEmployeesPage() {
 
   async function reactivate(member: TeamMember) {
     try {
-      await saveTeamMember(member.id, { isActive: true });
+      await updateEmployee(member.id, { isActive: true });
       toast.success('Đã kích hoạt lại nhân viên');
       await load();
     } catch (error) {
@@ -134,9 +134,7 @@ export function AdminEmployeesPage() {
       return;
     }
     try {
-      await api.put(`/auth/team/${statusTarget.id}/status`, {
-        reassignToAdminId: replacementId || null,
-      });
+      await updateEmployeeStatus(statusTarget.id, replacementId || null);
       toast.success('Đã vô hiệu hóa tài khoản và bàn giao dữ liệu');
       setStatusTarget(null);
       setReplacementId('');
