@@ -1,22 +1,50 @@
+import { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { TeamEmptyState } from '@/components/team/TeamEmptyState';
+import { TeamFormModal } from '@/components/team/TeamFormModal';
 import { TeamMemberCard } from '@/components/team/TeamMemberCard';
 import { TeamStatsCards } from '@/components/team/TeamStatsCards';
+import { addTeamMember, saveTeamMember, type TeamMemberInput } from '@/services/teamWriteClient';
 import type { TeamMember, TeamRole } from '@/types/teamMember';
 import { useTeamDirectory } from './team/useTeamDirectory';
 
 export function AdminTeamPage() {
   const team = useTeamDirectory();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<TeamMember | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  function openCreate() {
+    setEditing(null);
+    setModalOpen(true);
+  }
 
   function openEdit(member: TeamMember) {
-    console.log(member.id);
+    setEditing(member);
+    setModalOpen(true);
+  }
+
+  async function save(data: TeamMemberInput) {
+    setSaving(true);
+    try {
+      if (editing) await saveTeamMember(editing.id, data);
+      else await addTeamMember(data);
+      toast.success(editing ? 'Đã cập nhật nhân viên' : 'Đã thêm nhân viên');
+      setModalOpen(false);
+      await team.refresh();
+    } catch (error) {
+      toast.error((error as Error).message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><h1 className="text-xl font-black text-gray-900">Quản lý nhân viên</h1><p className="mt-1 text-sm text-gray-400">Quản lý tài khoản và phân công khách hàng.</p></div>
-        <button type="button" className="btn-primary text-sm"><Plus size={16} /> Thêm nhân viên</button>
+        <button type="button" onClick={openCreate} className="btn-primary text-sm"><Plus size={16} /> Thêm nhân viên</button>
       </div>
       <TeamStatsCards stats={team.stats} />
       <div className="grid gap-2 rounded-xl border border-gray-200 bg-white p-3 md:grid-cols-3">
@@ -25,6 +53,7 @@ export function AdminTeamPage() {
         <select value={team.status} onChange={(e) => team.setStatus(e.target.value as 'ACTIVE' | 'INACTIVE' | '')} className="rounded-lg border border-gray-200 px-3 py-2.5 text-sm"><option value="">Mọi trạng thái</option><option value="ACTIVE">Đang hoạt động</option><option value="INACTIVE">Ngừng hoạt động</option></select>
       </div>
       {team.loading ? <p className="py-20 text-center text-sm text-gray-400">Đang tải...</p> : team.members.length === 0 ? <TeamEmptyState /> : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{team.members.map((member) => <TeamMemberCard key={member.id} member={member} onEdit={openEdit} />)}</div>}
+      {modalOpen && <TeamFormModal member={editing} saving={saving} onClose={() => setModalOpen(false)} onSave={save} />}
     </div>
   );
 }
