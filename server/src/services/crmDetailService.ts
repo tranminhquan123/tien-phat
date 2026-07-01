@@ -56,6 +56,7 @@ export async function getCrmStats() {
 
 export async function getCrmOptions() {
   const admins = await prisma.admin.findMany({
+    where: { isActive: true, deletedAt: null },
     select: { id: true, name: true, username: true },
     orderBy: { name: 'asc' },
   });
