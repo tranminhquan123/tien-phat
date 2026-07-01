@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { Route } from 'react-router-dom';
+import { Navigate, Route } from 'react-router-dom';
 
 const Dashboard = lazy(() => import('@/pages/Admin/DashboardPage').then((m) => ({ default: m.DashboardPage })));
 const Products = lazy(() => import('@/pages/Admin/AdminProductsPage').then((m) => ({ default: m.AdminProductsPage })));
@@ -17,7 +17,8 @@ export function adminRouteSet() {
       <Route path="san-pham" element={<Products />} />
       <Route path="san-pham/them-moi" element={<ProductCreate />} />
       <Route path="danh-muc" element={<Categories />} />
-      <Route path="doi-ngu" element={<Team />} />
+      <Route path="nhan-vien" element={<Team />} />
+      <Route path="doi-ngu" element={<Navigate to="../nhan-vien" replace />} />
       <Route path="hoi-thoai" element={<Chat />} />
       <Route path="lien-he" element={<Contacts />} />
       <Route path="cai-dat" element={<Settings />} />
