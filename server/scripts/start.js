@@ -35,7 +35,10 @@ async function schemaIsReady() {
 
 function pushSchema() {
   const prismaCli = require.resolve('prisma');
-  execFileSync(process.execPath, [prismaCli, 'db', 'push'], {
+  // Prisma yêu cầu cờ này khi thêm unique index vào bảng đã có dữ liệu.
+  // Cờ chỉ chấp nhận cảnh báo để tiếp tục; PostgreSQL vẫn từ chối nếu dữ liệu
+  // thực tế vi phạm unique constraint, vì vậy không âm thầm xóa bản ghi.
+  execFileSync(process.execPath, [prismaCli, 'db', 'push', '--accept-data-loss'], {
     stdio: 'inherit',
     env: process.env,
   });
