@@ -2,11 +2,13 @@
 import { Router } from 'express';
 import { getPublicConfig, adminUpdateConfig, listBanners, saveBanner, removeBanner } from '@/controllers/configController';
 import { requireAuth } from '@/middlewares/authMiddleware';
+import teamRoutes from '@/routes/teamRoutes';
 
 const router = Router();
 
 router.get('/', getPublicConfig);
 router.put('/admin', requireAuth, adminUpdateConfig);
+router.use('/admin/team', teamRoutes);
 
 router.get('/banners', listBanners);
 router.post('/banners/admin', requireAuth, saveBanner);
