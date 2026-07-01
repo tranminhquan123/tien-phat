@@ -50,6 +50,32 @@ export async function adminUpdateEmployee(req: AuthRequest, res: Response) {
   }
 }
 
+export async function adminChangeEmployeeStatus(req: AuthRequest, res: Response) {
+  const isActive = req.body?.isActive;
+  if (typeof isActive !== 'boolean') {
+    res.status(400).json({ success: false, message: 'Trạng thái nhân viên không hợp lệ' });
+    return;
+  }
+
+  try {
+    if (isActive) {
+      const data = await updateEmployee(req.adminId!, req.params['id'] as string, { isActive: true });
+      res.json({ success: true, data });
+      return;
+    }
+
+    const parsed = disableEmployeeSchema.safeParse(req.body || {});
+    if (!parsed.success) {
+      res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Dữ liệu bàn giao không hợp lệ' });
+      return;
+    }
+    const data = await disableEmployee(req.adminId!, req.params['id'] as string, parsed.data.reassignToAdminId);
+    res.json({ success: true, data });
+  } catch (error) {
+    handleError(res, error);
+  }
+}
+
 export async function adminDisableEmployee(req: AuthRequest, res: Response) {
   const parsed = disableEmployeeSchema.safeParse(req.body || {});
   if (!parsed.success) {
@@ -57,11 +83,7 @@ export async function adminDisableEmployee(req: AuthRequest, res: Response) {
     return;
   }
   try {
-    const data = await disableEmployee(
-      req.adminId!,
-      req.params['id'] as string,
-      parsed.data.reassignToAdminId
-    );
+    const data = await disableEmployee(req.adminId!, req.params['id'] as string, parsed.data.reassignToAdminId);
     res.json({ success: true, data });
   } catch (error) {
     handleError(res, error);
@@ -75,11 +97,7 @@ export async function adminReassignEmployee(req: AuthRequest, res: Response) {
     return;
   }
   try {
-    const data = await reassignEmployeeWork(
-      req.adminId!,
-      req.params['id'] as string,
-      parsed.data.reassignToAdminId
-    );
+    const data = await reassignEmployeeWork(req.adminId!, req.params['id'] as string, parsed.data.reassignToAdminId);
     res.json({ success: true, data });
   } catch (error) {
     handleError(res, error);
