@@ -23,7 +23,7 @@ export function TeamMemberCard({ member, onEdit, onOther }: {
         <Info label="Khách phụ trách" value={String(member.activeContactCount || 0)} />
         <Info label="Hội thoại" value={String(member.activeChatCount || 0)} />
       </div>
-      {active && onOther && <div className="mt-3 text-right text-xs"><ActionButton label="Tác vụ" onPress={() => onOther(member)} /></div>}
+      {onOther && <div className="mt-3 text-right text-xs"><ActionButton label={active ? 'Tác vụ' : 'Kích hoạt'} onPress={() => onOther(member)} /></div>}
     </article>
   );
 }
