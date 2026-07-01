@@ -5,6 +5,7 @@ import {
   disableEmployee,
   updateEmployee,
 } from '@/services/employeeMutationService';
+import { reassignEmployeeWork } from '@/services/employeeReassignmentService';
 import { EmployeeError } from '@/services/employeeQueryService';
 import {
   createEmployeeSchema,
@@ -57,6 +58,24 @@ export async function adminDisableEmployee(req: AuthRequest, res: Response) {
   }
   try {
     const data = await disableEmployee(
+      req.adminId!,
+      req.params['id'] as string,
+      parsed.data.reassignToAdminId
+    );
+    res.json({ success: true, data });
+  } catch (error) {
+    handleError(res, error);
+  }
+}
+
+export async function adminReassignEmployee(req: AuthRequest, res: Response) {
+  const parsed = disableEmployeeSchema.safeParse(req.body || {});
+  if (!parsed.success || !parsed.data.reassignToAdminId) {
+    res.status(400).json({ success: false, message: 'Cần chọn nhân viên nhận bàn giao' });
+    return;
+  }
+  try {
+    const data = await reassignEmployeeWork(
       req.adminId!,
       req.params['id'] as string,
       parsed.data.reassignToAdminId
