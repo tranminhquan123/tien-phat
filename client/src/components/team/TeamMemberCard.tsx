@@ -7,7 +7,7 @@ const roles = { OWNER: 'Chủ tài khoản', MANAGER: 'Quản lý', STAFF: 'Nhâ
 export function TeamMemberCard({ member, onEdit, onOther }: {
   member: TeamMember;
   onEdit: (member: TeamMember) => void;
-  onOther: (member: TeamMember) => void;
+  onOther?: (member: TeamMember) => void;
 }) {
   const active = member.isActive && !member.deletedAt;
   return (
@@ -23,7 +23,7 @@ export function TeamMemberCard({ member, onEdit, onOther }: {
         <Info label="Khách phụ trách" value={String(member.activeContactCount || 0)} />
         <Info label="Hội thoại" value={String(member.activeChatCount || 0)} />
       </div>
-      {active && <div className="mt-3 text-right text-xs"><ActionButton label="Tác vụ" onPress={() => onOther(member)} /></div>}
+      {active && onOther && <div className="mt-3 text-right text-xs"><ActionButton label="Tác vụ" onPress={() => onOther(member)} /></div>}
     </article>
   );
 }
