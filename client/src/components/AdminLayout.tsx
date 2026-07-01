@@ -1,1 +1,1 @@
-export { AdminLayoutNext as AdminLayout } from './AdminLayoutNext';
+export { AdminLayoutRestored as AdminLayout } from './AdminLayoutRestored';
