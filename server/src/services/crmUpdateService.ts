@@ -11,7 +11,7 @@ export type CrmUpdateInput = {
   note?: string | null;
   aiSummary?: string | null;
   leadScore?: number | null;
-  extractedRequirements?: Prisma.InputJsonValue | null;
+  extractedRequirements?: Record<string, unknown> | null;
 };
 
 export async function updateCrmContact(id: string, input: CrmUpdateInput, adminId?: string) {
@@ -50,8 +50,8 @@ export async function updateCrmContact(id: string, input: CrmUpdateInput, adminI
   }
   if (input.aiSummary !== undefined) data.aiSummary = input.aiSummary;
   if (input.leadScore !== undefined) data.leadScore = input.leadScore;
-  if (input.extractedRequirements !== undefined) {
-    data.extractedRequirements = input.extractedRequirements === null ? Prisma.JsonNull : input.extractedRequirements;
+  if (input.extractedRequirements && typeof input.extractedRequirements === 'object') {
+    data.extractedRequirements = input.extractedRequirements as any;
   }
 
   return prisma.$transaction(async (tx) => {
