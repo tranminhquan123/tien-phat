@@ -5,6 +5,7 @@ import { TeamEmptyState } from '@/components/team/TeamEmptyState';
 import { TeamFormModal } from '@/components/team/TeamFormModal';
 import { TeamMemberCard } from '@/components/team/TeamMemberCard';
 import { TeamStatsCards } from '@/components/team/TeamStatsCards';
+import { api } from '@/services/api';
 import { addTeamMember, saveTeamMember, type TeamMemberInput } from '@/services/teamWriteClient';
 import type { TeamMember, TeamRole } from '@/types/teamMember';
 import { useTeamDirectory } from './team/useTeamDirectory';
@@ -40,6 +41,29 @@ export function AdminTeamPage() {
     }
   }
 
+  async function changeStatus(member: TeamMember) {
+    const count = (member.activeContactCount || 0) + (member.activeChatCount || 0);
+    let replacementId: string | null = null;
+    if (count > 0) {
+      const options = team.members
+        .filter((item) => item.id !== member.id && item.isActive && !item.deletedAt)
+        .map((item) => `${item.name}: ${item.id}`)
+        .join('\n');
+      replacementId = window.prompt(`Nhập ID người nhận bàn giao:\n${options}`)?.trim() || null;
+      if (!replacementId) return;
+    } else if (!window.confirm(`Ngừng tài khoản của ${member.name}?`)) {
+      return;
+    }
+
+    try {
+      await api.put(`/auth/team/${member.id}/status`, { reassignToAdminId: replacementId });
+      toast.success('Đã cập nhật trạng thái nhân viên');
+      await team.refresh();
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -52,7 +76,7 @@ export function AdminTeamPage() {
         <select value={team.role} onChange={(e) => team.setRole(e.target.value as TeamRole | '')} className="rounded-lg border border-gray-200 px-3 py-2.5 text-sm"><option value="">Mọi vai trò</option><option value="OWNER">Chủ tài khoản</option><option value="MANAGER">Quản lý</option><option value="STAFF">Nhân viên</option></select>
         <select value={team.status} onChange={(e) => team.setStatus(e.target.value as 'ACTIVE' | 'INACTIVE' | '')} className="rounded-lg border border-gray-200 px-3 py-2.5 text-sm"><option value="">Mọi trạng thái</option><option value="ACTIVE">Đang hoạt động</option><option value="INACTIVE">Ngừng hoạt động</option></select>
       </div>
-      {team.loading ? <p className="py-20 text-center text-sm text-gray-400">Đang tải...</p> : team.members.length === 0 ? <TeamEmptyState /> : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{team.members.map((member) => <TeamMemberCard key={member.id} member={member} onEdit={openEdit} />)}</div>}
+      {team.loading ? <p className="py-20 text-center text-sm text-gray-400">Đang tải...</p> : team.members.length === 0 ? <TeamEmptyState /> : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{team.members.map((member) => <TeamMemberCard key={member.id} member={member} onEdit={openEdit} onOther={changeStatus} />)}</div>}
       {modalOpen && <TeamFormModal member={editing} saving={saving} onClose={() => setModalOpen(false)} onSave={save} />}
     </div>
   );
