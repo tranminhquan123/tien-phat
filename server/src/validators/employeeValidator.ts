@@ -2,17 +2,15 @@ import { z } from 'zod';
 
 export const adminRoleSchema = z.enum(['OWNER', 'MANAGER', 'STAFF']);
 
-const optionalEmail = z.union([
-  z.string().trim().email().max(160),
-  z.literal(''),
-  z.null(),
-]).optional().transform((value) => value || null);
+const optionalEmail = z.preprocess(
+  (value) => value === '' ? null : value,
+  z.string().trim().email().max(160).nullable().optional()
+);
 
-const optionalPhone = z.union([
-  z.string().trim().max(20),
-  z.literal(''),
-  z.null(),
-]).optional().transform((value) => value || null);
+const optionalPhone = z.preprocess(
+  (value) => value === '' ? null : value,
+  z.string().trim().max(20).nullable().optional()
+);
 
 export const employeeListQuerySchema = z.object({
   search: z.string().trim().max(200).optional(),
