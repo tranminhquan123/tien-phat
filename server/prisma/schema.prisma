@@ -1,5 +1,11 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
 
 model Admin {
   id String @id @default(uuid())
@@ -179,9 +185,54 @@ model SiteConfig {
   updatedAt DateTime @updatedAt
 }
 
-enum ContactMessageStatus { NEW READING RECEIVED CONSULTING WAITING_CUSTOMER QUOTED WON LOST REPLIED CLOSED }
-enum ContactPriority { LOW MEDIUM HIGH }
-enum ContactSource { CONTACT_FORM CHATBOT MANUAL OTHER }
-enum ContactActivityType { CREATED STATUS_CHANGED NOTE_ADDED FOLLOW_UP_SET FOLLOW_UP_COMPLETED CONTACTED ASSIGNED PRIORITY_CHANGED SYSTEM }
-enum ChatSessionStatus { AI_ACTIVE WAITING_ADMIN ADMIN_ACTIVE CLOSED }
-enum ChatMessageSender { CUSTOMER ASSISTANT ADMIN SYSTEM }
+enum ContactMessageStatus {
+  NEW
+  READING
+  RECEIVED
+  CONSULTING
+  WAITING_CUSTOMER
+  QUOTED
+  WON
+  LOST
+  REPLIED
+  CLOSED
+}
+
+enum ContactPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ContactSource {
+  CONTACT_FORM
+  CHATBOT
+  MANUAL
+  OTHER
+}
+
+enum ContactActivityType {
+  CREATED
+  STATUS_CHANGED
+  NOTE_ADDED
+  FOLLOW_UP_SET
+  FOLLOW_UP_COMPLETED
+  CONTACTED
+  ASSIGNED
+  PRIORITY_CHANGED
+  SYSTEM
+}
+
+enum ChatSessionStatus {
+  AI_ACTIVE
+  WAITING_ADMIN
+  ADMIN_ACTIVE
+  CLOSED
+}
+
+enum ChatMessageSender {
+  CUSTOMER
+  ASSISTANT
+  ADMIN
+  SYSTEM
+}
