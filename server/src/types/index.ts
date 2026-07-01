@@ -1,9 +1,11 @@
-// src/types/index.ts
 import type { Request } from 'express';
+
+export type AdminRole = 'OWNER' | 'MANAGER' | 'STAFF';
 
 export interface AuthRequest extends Request {
   adminId?: string;
   adminUsername?: string;
+  adminRole?: AdminRole;
 }
 
 export interface PaginationQuery {
@@ -24,5 +26,14 @@ export interface ApiResponse<T> {
   };
 }
 
-// Định nghĩa enum thủ công để không phụ thuộc prisma generate
-export type ContactMessageStatus = 'NEW' | 'READING' | 'REPLIED' | 'CLOSED';
+export type ContactMessageStatus =
+  | 'NEW'
+  | 'READING'
+  | 'RECEIVED'
+  | 'CONSULTING'
+  | 'WAITING_CUSTOMER'
+  | 'QUOTED'
+  | 'WON'
+  | 'LOST'
+  | 'REPLIED'
+  | 'CLOSED';

@@ -173,10 +173,17 @@ export interface SiteConfig {
   [key: string]: string;
 }
 
+export type AdminRole = 'OWNER' | 'MANAGER' | 'STAFF';
+
 export interface AdminUser {
   id: string;
   username: string;
   name: string;
+  email?: string | null;
+  phone?: string | null;
+  role: AdminRole;
+  isActive: boolean;
+  lastLoginAt?: string | null;
 }
 
 export interface PaginatedResponse<T> {
