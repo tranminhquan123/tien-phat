@@ -2,6 +2,18 @@ import { z } from 'zod';
 
 export const adminRoleSchema = z.enum(['OWNER', 'MANAGER', 'STAFF']);
 
+const optionalEmail = z.union([
+  z.string().trim().email().max(160),
+  z.literal(''),
+  z.null(),
+]).optional().transform((value) => value || null);
+
+const optionalPhone = z.union([
+  z.string().trim().max(20),
+  z.literal(''),
+  z.null(),
+]).optional().transform((value) => value || null);
+
 export const employeeListQuerySchema = z.object({
   search: z.string().trim().max(200).optional(),
   role: adminRoleSchema.optional(),
@@ -13,8 +25,8 @@ export const employeeListQuerySchema = z.object({
 export const createEmployeeSchema = z.object({
   name: z.string().trim().min(2).max(100),
   username: z.string().trim().min(4).max(30).regex(/^[a-zA-Z0-9._-]+$/).transform((value) => value.toLowerCase()),
-  email: z.string().trim().email().max(160).nullable().optional(),
-  phone: z.string().trim().max(20).nullable().optional(),
+  email: optionalEmail,
+  phone: optionalPhone,
   role: adminRoleSchema.default('STAFF'),
   password: z.string().min(8).max(72),
 });
@@ -22,8 +34,8 @@ export const createEmployeeSchema = z.object({
 export const updateEmployeeSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   username: z.string().trim().min(4).max(30).regex(/^[a-zA-Z0-9._-]+$/).transform((value) => value.toLowerCase()).optional(),
-  email: z.string().trim().email().max(160).nullable().optional(),
-  phone: z.string().trim().max(20).nullable().optional(),
+  email: optionalEmail,
+  phone: optionalPhone,
   role: adminRoleSchema.optional(),
   isActive: z.boolean().optional(),
 }).refine((value) => Object.keys(value).length > 0, { message: 'Không có dữ liệu cần cập nhật' });
