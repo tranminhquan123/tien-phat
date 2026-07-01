@@ -83,3 +83,6 @@ jobs:
 
       - name: Smoke-test health, chat recommendation and handoff
         run: node scripts/ci-smoke.js
+
+      - name: Smoke-test mini CRM
+        run: node scripts/ci-crm-smoke.js

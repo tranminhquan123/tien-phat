@@ -1,168 +1,226 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
 }
 
 model Admin {
-  id           String        @id @default(uuid())
-  username     String        @unique
-  password     String
-  name         String
+  id String @id @default(uuid())
+  username String @unique
+  password String
+  name String
   chatSessions ChatSession[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  assignedContacts ContactMessage[] @relation("AssignedContact")
+  contactActivities ContactActivity[] @relation("ContactActivityAdmin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Category {
-  id          String    @id @default(uuid())
-  name        String
-  slug        String    @unique
+  id String @id @default(uuid())
+  name String
+  slug String @unique
   description String?
-  imageUrl    String?
-  isActive    Boolean   @default(true)
-  sortOrder   Int       @default(0)
-  products    Product[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  imageUrl String?
+  isActive Boolean @default(true)
+  sortOrder Int @default(0)
+  products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Product {
-  id           String         @id @default(uuid())
-  name         String
-  slug         String         @unique
-  description  String?
-  price        Float?
-  unit         String?        // m², cái, bộ, thùng...
-  brand        String?
-  origin       String?        // Xuất xứ: Việt Nam, Ý, Tây Ban Nha...
-  size         String?        // Kích thước hoặc danh mục cấp 2
-  color        String?        // Màu sắc
-  productType  String?        // Loại gạch
-  surface      String?        // Bề mặt
-  glaze        String?        // Men
-  application  String?        // Công năng
-  pattern      String?        // Hoa văn
-  spaces       String?        // Không gian sử dụng
-  collection   String?        // Bộ sưu tập
-  faceCount    Int?           // Số face
-  piecesPerBox Int?           // Số viên/thùng
-  areaPerBox   Float?         // Diện tích m²/thùng
-  categoryId   String
-  category     Category       @relation(fields: [categoryId], references: [id])
-  images       ProductImage[]
-  isActive     Boolean        @default(true)
-  isFeatured   Boolean        @default(false)
-  sortOrder    Int            @default(0)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
+  id String @id @default(uuid())
+  name String
+  slug String @unique
+  description String?
+  price Float?
+  unit String?
+  brand String?
+  origin String?
+  size String?
+  color String?
+  productType String?
+  surface String?
+  glaze String?
+  application String?
+  pattern String?
+  spaces String?
+  collection String?
+  faceCount Int?
+  piecesPerBox Int?
+  areaPerBox Float?
+  categoryId String
+  category Category @relation(fields: [categoryId], references: [id])
+  images ProductImage[]
+  isActive Boolean @default(true)
+  isFeatured Boolean @default(false)
+  sortOrder Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   @@index([categoryId, size])
 }
 
 model ProductImage {
-  id        String   @id @default(uuid())
-  url       String
-  altText   String?
-  isPrimary Boolean  @default(false)
-  sortOrder Int      @default(0)
+  id String @id @default(uuid())
+  url String
+  altText String?
+  isPrimary Boolean @default(false)
+  sortOrder Int @default(0)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
 
 model Banner {
-  id        String   @id @default(uuid())
-  title     String?
-  subtitle  String?
-  imageUrl  String
-  linkUrl   String?
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
+  id String @id @default(uuid())
+  title String?
+  subtitle String?
+  imageUrl String
+  linkUrl String?
+  isActive Boolean @default(true)
+  sortOrder Int @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model ContactMessage {
-  id        String               @id @default(uuid())
-  name      String
-  phone     String
-  email     String?
-  message   String
-  status    ContactMessageStatus @default(NEW)
-  note      String?              // Ghi chú nội bộ
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
+  id String @id @default(uuid())
+  name String
+  phone String
+  email String?
+  message String
+  status ContactMessageStatus @default(NEW)
+  priority ContactPriority @default(MEDIUM)
+  source ContactSource @default(CONTACT_FORM)
+  note String?
+  assignedAdminId String?
+  assignedAdmin Admin? @relation("AssignedContact", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  followUpAt DateTime?
+  lastContactAt DateTime?
+  aiSummary String?
+  leadScore Int?
+  extractedRequirements Json?
+  activities ContactActivity[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, updatedAt])
+  @@index([priority, status])
+  @@index([followUpAt])
+  @@index([assignedAdminId, status])
+  @@index([source, createdAt])
+}
+
+model ContactActivity {
+  id String @id @default(uuid())
+  contactId String
+  contact ContactMessage @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  type ContactActivityType
+  content String
+  metadata Json?
+  createdByAdminId String?
+  createdByAdmin Admin? @relation("ContactActivityAdmin", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  @@index([contactId, createdAt])
 }
 
 model ChatSession {
-  id                    String            @id @default(uuid())
-  accessToken           String            @unique
-  status                ChatSessionStatus @default(AI_ACTIVE)
-  customerName          String?
-  phone                 String?
-  email                 String?
-  detectedSize          String?
-  detectedIntent        String?
-  detectedCategory      String?
-  detectedSpace         String?
-  detectedBrand         String?
-  detectedColor         String?
-  sourcePage            String?
-  handoffContactId      String?
-  assignedAdminId       String?
-  assignedAdmin         Admin?            @relation(fields: [assignedAdminId], references: [id], onDelete: SetNull)
-  acceptedAt            DateTime?
-  closedAt              DateTime?
-  aiSummary             String?
-  leadScore             Int?
+  id String @id @default(uuid())
+  accessToken String @unique
+  status ChatSessionStatus @default(AI_ACTIVE)
+  customerName String?
+  phone String?
+  email String?
+  detectedSize String?
+  detectedIntent String?
+  detectedCategory String?
+  detectedSpace String?
+  detectedBrand String?
+  detectedColor String?
+  sourcePage String?
+  handoffContactId String?
+  assignedAdminId String?
+  assignedAdmin Admin? @relation(fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  acceptedAt DateTime?
+  closedAt DateTime?
+  aiSummary String?
+  leadScore Int?
   extractedRequirements Json?
-  suggestedProductIds   Json?
-  aiProvider            String?
-  aiModel               String?
-  lastAnalyzedAt        DateTime?
-  lastMessageAt         DateTime          @default(now())
-  messages              ChatMessage[]
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-
+  suggestedProductIds Json?
+  aiProvider String?
+  aiModel String?
+  lastAnalyzedAt DateTime?
+  lastMessageAt DateTime @default(now())
+  messages ChatMessage[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   @@index([status, lastMessageAt])
   @@index([assignedAdminId, status])
   @@index([leadScore])
+  @@index([handoffContactId])
   @@index([lastMessageAt])
 }
 
 model ChatMessage {
-  id        String            @id @default(uuid())
+  id String @id @default(uuid())
   sessionId String
-  session   ChatSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sender    ChatMessageSender
-  content   String
-  metadata  Json?
-  isRead    Boolean           @default(false)
-  createdAt DateTime          @default(now())
-
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender ChatMessageSender
+  content String
+  metadata Json?
+  isRead Boolean @default(false)
+  createdAt DateTime @default(now())
   @@index([sessionId, createdAt])
   @@index([sessionId, sender, isRead])
 }
 
 model SiteConfig {
-  id          String   @id @default(uuid())
-  key         String   @unique
-  value       String
+  id String @id @default(uuid())
+  key String @unique
+  value String
   description String?
-  updatedAt   DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 enum ContactMessageStatus {
   NEW
   READING
+  RECEIVED
+  CONSULTING
+  WAITING_CUSTOMER
+  QUOTED
+  WON
+  LOST
   REPLIED
   CLOSED
+}
+
+enum ContactPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ContactSource {
+  CONTACT_FORM
+  CHATBOT
+  MANUAL
+  OTHER
+}
+
+enum ContactActivityType {
+  CREATED
+  STATUS_CHANGED
+  NOTE_ADDED
+  FOLLOW_UP_SET
+  FOLLOW_UP_COMPLETED
+  CONTACTED
+  ASSIGNED
+  PRIORITY_CHANGED
+  SYSTEM
 }
 
 enum ChatSessionStatus {
