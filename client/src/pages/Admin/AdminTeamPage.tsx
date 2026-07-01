@@ -42,6 +42,18 @@ export function AdminTeamPage() {
   }
 
   async function changeStatus(member: TeamMember) {
+    const active = member.isActive && !member.deletedAt;
+    if (!active) {
+      try {
+        await saveTeamMember(member.id, { isActive: true });
+        toast.success('Đã kích hoạt lại nhân viên');
+        await team.refresh();
+      } catch (error) {
+        toast.error((error as Error).message);
+      }
+      return;
+    }
+
     const count = (member.activeContactCount || 0) + (member.activeChatCount || 0);
     let replacementId: string | null = null;
     if (count > 0) {
