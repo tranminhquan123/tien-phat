@@ -1,21 +1,23 @@
-// src/routes/contactRoutes.ts
 import { Router } from 'express';
+import { submitContact, adminSendTestEmail } from '@/controllers/contactController';
 import {
-  submitContact,
-  adminListContacts,
-  adminUpdateContact,
-  adminGetContactStats,
-  adminSendTestEmail,
-} from '@/controllers/contactController';
+  crmGetContact,
+  crmGetOptions,
+  crmGetStats,
+  crmListContacts,
+  crmUpdateContact,
+} from '@/controllers/crmController';
 import { requireAuth } from '@/middlewares/authMiddleware';
 import { contactRateLimit } from '@/middlewares/contactRateLimit';
 
 const router = Router();
 
 router.post('/', contactRateLimit, submitContact);
-router.get('/admin', requireAuth, adminListContacts);
-router.get('/admin/stats', requireAuth, adminGetContactStats);
+router.get('/admin/stats', requireAuth, crmGetStats);
+router.get('/admin/options', requireAuth, crmGetOptions);
 router.post('/admin/test-email', requireAuth, adminSendTestEmail);
-router.put('/admin/:id', requireAuth, adminUpdateContact);
+router.get('/admin', requireAuth, crmListContacts);
+router.get('/admin/:id', requireAuth, crmGetContact);
+router.put('/admin/:id', requireAuth, crmUpdateContact);
 
 export default router;
